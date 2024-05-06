@@ -1,21 +1,30 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	v1 "k8s.io/api/networking/v1"
-	"k8s.io/client-go/kubernetes"
 	"log"
+	"net/http"
 	"strings"
 	"sync"
 )
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+
+func ingressWhitelist(c *gin.Context) {
+	ips := c.PostForm("ips")
+	act := c.PostForm("act")
+
+	ChangeWhitelist(ips, act)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    20000,
+		"message": "Ingress whitelist update completed.",
+	})
 }
 
-func ChangeWhitelist(ips, act string, clientSet *kubernetes.Clientset) {
+func ChangeWhitelist(ips, act string) {
 	ipsToAdd := strings.Split(ips, ",")
 
-	ingressList := GetAllIngress(clientSet)
+	ingressList := GetAllIngress(ClientSet)
 
 	// 使用并发控制
 	var wg sync.WaitGroup
@@ -26,13 +35,13 @@ func ChangeWhitelist(ips, act string, clientSet *kubernetes.Clientset) {
 		go func(ingress v1.Ingress) {
 			defer wg.Done()
 			if act == "add" {
-				err := AddIPsToWhitelist(clientSet, ingress.Namespace, ingress.Name, ipsToAdd)
+				err := AddIPsToWhitelist(ClientSet, ingress.Namespace, ingress.Name, ipsToAdd)
 				if err != nil {
 					updateChan <- err
 					return
 				}
 			} else if act == "del" {
-				err := RemoveIPsFromWhitelist(clientSet, ingress.Namespace, ingress.Name, ipsToAdd)
+				err := RemoveIPsFromWhitelist(ClientSet, ingress.Namespace, ingress.Name, ipsToAdd)
 				if err != nil {
 					updateChan <- err
 					return
@@ -54,5 +63,15 @@ func ChangeWhitelist(ips, act string, clientSet *kubernetes.Clientset) {
 		}
 	}
 
-	log.Println("Ingress whitelist update completed.")
+}
+
+func fetchAllWhitelistLog(c *gin.Context) {
+	var allLog []WhitelistLog
+	DB.Find(&allLog)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 20000,
+		"data": allLog,
+	})
+
 }
