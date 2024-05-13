@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	v1 "k8s.io/api/networking/v1"
 	"log"
@@ -13,6 +14,10 @@ func ingressWhitelist(c *gin.Context) {
 	ips := c.PostForm("ips")
 	act := c.PostForm("act")
 
+	fmt.Println(ips)
+	fmt.Println(act)
+
+	// todo: 完善去重功能
 	ChangeWhitelist(ips, act)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -71,7 +76,10 @@ func fetchAllWhitelistLog(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 20000,
-		"data": allLog,
+		"data": gin.H{
+			"total": len(allLog),
+			"items": allLog,
+		},
 	})
 
 }

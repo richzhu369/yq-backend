@@ -14,7 +14,7 @@ type User struct {
 	Password      string    `json:"password" gorm:"-" binding:"required"`
 	PasswordHash  string    `gorm:"size:128"`
 	LastLoginTime time.Time `gorm:"default:null"`
-	Role          string    `json:"role" gorm:"size:20;not null" binding:"required"`
+	Role          string    `json:"role" gorm:"size:20;not null"`
 }
 
 type WhitelistLog struct {

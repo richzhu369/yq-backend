@@ -9,20 +9,21 @@ import (
 func userLogin(c *gin.Context) {
 	var user User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
 		return
 	}
 
 	// 现在可以使用 loginReq.Username 和 loginReq.Password 获取 JSON 中的值
-	fmt.Printf("Username: %s, Password: %s, Role: %sn", user.Username, user.Password, user.Role)
+	fmt.Printf("Username: %s, Password: %s, Role: %s\n", user.Username, user.Password, user.Role)
 
 	// 进行登录验证逻辑...
 	dbUser := new(User)
 	if err := DB.Where("username = ?", user.Username).First(dbUser).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"code": 60000, "message": "用户不存在"})
+		c.JSON(http.StatusOK, gin.H{"code": 60000, "message": "用户不存在"})
 		return
 	}
-	if dbUser.CheckPassword(user.Password, user.PasswordHash) {
+
+	if dbUser.CheckPassword(user.Password, dbUser.PasswordHash) {
 		// 密码验证成功，生成 token 并返回
 		token := "admin-token" // 这里应该是生成的 token
 		c.JSON(http.StatusOK, gin.H{
@@ -33,7 +34,7 @@ func userLogin(c *gin.Context) {
 		})
 	} else {
 		// 密码验证失败
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"code":    60000,
 			"message": "账号密码错误",
 		})
@@ -75,9 +76,9 @@ func userCreate(c *gin.Context) {
 	// 创建用户
 	if err := user.CreateUser(DB,user); err != nil {
 		if err.Error() == "user already exists" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "User already exists"})
+			c.JSON(http.StatusOK, gin.H{"error": "User already exists"})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user", "detail": err.Error()})
+			c.JSON(http.StatusOK, gin.H{"error": "Failed to create user", "detail": err.Error()})
 		}
 		return
 	}
@@ -98,11 +99,11 @@ func userDelete(c *gin.Context) {
 	// 使用用户名来删除用户
 	result := DB.Where("username = ?", username).Delete(&User{})
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user", "detail": result.Error.Error()})
+		c.JSON(http.StatusOK, gin.H{"error": "Failed to delete user", "detail": result.Error.Error()})
 		return
 	}
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusOK, gin.H{"error": "User not found"})
 		return
 	}
 
