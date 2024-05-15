@@ -28,7 +28,7 @@ func init() {
 	}
 
 	// 自动迁移模式
-	ERR = DB.AutoMigrate(&User{},WhitelistLog{})
+	ERR = DB.AutoMigrate(&User{}, WhiteList{})
 	if ERR != nil {
 		log.Fatal("failed to migrate database: ", ERR)
 	}
@@ -42,9 +42,6 @@ func init() {
 
 	// 创建 Kubernetes 客户端
 	ClientSet, ERR = kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
 
 }
 

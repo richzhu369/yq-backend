@@ -18,12 +18,18 @@ func ingressWhitelist(c *gin.Context) {
 	fmt.Println(act)
 
 	// todo: 完善去重功能
-	ChangeWhitelist(ips, act)
+	//ChangeWhitelist(ips, act)
+	prepareWhitelist(ips, act)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    20000,
 		"message": "Ingress whitelist update completed.",
 	})
+}
+
+// 获得数据库中所有的，跟新增或删除的ip组成新是数组，return出来，给ChangeWhitelist 函数
+func prepareWhitelist(ips, act string) (resIps []string) {
+
 }
 
 func ChangeWhitelist(ips, act string) {
@@ -67,19 +73,17 @@ func ChangeWhitelist(ips, act string) {
 			log.Fatalf("Failed to update Ingress whitelist: %v", err)
 		}
 	}
-
 }
 
-func fetchAllWhitelistLog(c *gin.Context) {
-	var allLog []WhitelistLog
-	DB.Find(&allLog)
+func fetchAllWhitelist(c *gin.Context) {
+	var allList []WhiteList
+	DB.Find(&allList)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 20000,
 		"data": gin.H{
-			"total": len(allLog),
-			"items": allLog,
+			"total": len(allList),
+			"items": allList,
 		},
 	})
-
 }

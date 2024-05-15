@@ -20,7 +20,13 @@ type User struct {
 type WhitelistLog struct {
 	gorm.Model
 	IP     string `json:"ip"`
+	Act    string `json:"act"`
 	OpUser string `json:"opUser"`
+}
+
+type WhiteList struct {
+	IP     string `json:"ip"`
+	Status string `json:"status"`
 }
 
 func (u *User) SetPassword(password string) string {
