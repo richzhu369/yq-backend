@@ -26,7 +26,6 @@ type WhitelistLog struct {
 
 type WhiteList struct {
 	IP     string `json:"ip"`
-	Status string `json:"status"`
 }
 
 func (u *User) SetPassword(password string) string {

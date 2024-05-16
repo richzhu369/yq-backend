@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/gin-gonic/gin v1.9.1
+	golang.org/x/crypto v0.21.0
 	gorm.io/driver/sqlite v1.5.5
 	gorm.io/gorm v1.25.10
 	k8s.io/api v0.30.0
@@ -49,7 +50,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
