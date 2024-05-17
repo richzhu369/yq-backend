@@ -18,10 +18,8 @@ func ingressWhitelist(c *gin.Context) {
 	fmt.Println(ips)
 	fmt.Println(act)
 
-	// todo: 完善去重功能
-	//ChangeWhitelist(ips, act)
-	_, res := prepareWhitelist(ips, act)
-	if !res {
+	resIps, resStatus := prepareWhitelist(ips, act)
+	if !resStatus {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    40003,
 			"message": "IP地址不正确.",
@@ -29,6 +27,9 @@ func ingressWhitelist(c *gin.Context) {
 
 		return
 	}
+
+	// 这里判断加白操作 是否执行成功
+	ChangeWhitelist(resIps)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    20000,
@@ -76,7 +77,7 @@ func prepareWhitelist(ips, act string) (resIps []string, runRes bool) {
 
 	resIps = removeDuplicationMap(resIps)
 
-	fmt.Println(resIps)
+	log.Println("加白的ip为：", resIps)
 
 	DB.Where("1=1").Delete(&WhiteList{})
 
@@ -123,33 +124,25 @@ func removeDuplicationMap(arr []string) []string {
 	return arr[:j]
 }
 
-func ChangeWhitelist(ips, act string) {
-	ipsToAdd := strings.Split(ips, ",")
+func ChangeWhitelist(ips []string) {
 
-	ingressList := GetAllIngress(ClientSet)
+	ingressList := GetAllCWIngress(ClientSet)
 
 	// 使用并发控制
 	var wg sync.WaitGroup
 	updateChan := make(chan error)
+	var failedUpdates []string
 
 	for _, ingress := range ingressList.Items {
 		wg.Add(1)
 		go func(ingress v1.Ingress) {
 			defer wg.Done()
-			if act == "add" {
-				err := AddIPsToWhitelist(ClientSet, ingress.Namespace, ingress.Name, ipsToAdd)
-				if err != nil {
-					updateChan <- err
-					return
-				}
-			} else if act == "del" {
-				err := RemoveIPsFromWhitelist(ClientSet, ingress.Namespace, ingress.Name, ipsToAdd)
-				if err != nil {
-					updateChan <- err
-					return
-				}
+			err := AddIPsToWhitelist(ClientSet, ingress.Namespace, ingress.Name, ips)
+			if err != nil {
+				updateChan <- err
+				return
 			}
-
+			updateChan <- nil
 		}(ingress)
 	}
 
@@ -161,9 +154,16 @@ func ChangeWhitelist(ips, act string) {
 	// 处理并发操作结果
 	for err := range updateChan {
 		if err != nil {
-			log.Fatalf("Failed to update Ingress whitelist: %v", err)
+			log.Printf("加白失败: %v", err)
+			failedUpdates = append(failedUpdates, err.Error())
 		}
 	}
+	if len(failedUpdates) > 0 {
+		log.Println("部分更新未成功:", failedUpdates)
+	} else {
+		log.Println("所有更新已成功完成")
+	}
+
 }
 
 func fetchAllWhitelist(c *gin.Context) {

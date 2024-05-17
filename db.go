@@ -25,7 +25,7 @@ type WhitelistLog struct {
 }
 
 type WhiteList struct {
-	IP     string `json:"ip"`
+	IP string `json:"ip"`
 }
 
 func (u *User) SetPassword(password string) string {
@@ -45,6 +45,16 @@ func (u *User) CheckPassword(password, hashedPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 
+}
+
+func (u *User) ResetPassword(user User) bool {
+
+	user.PasswordHash = u.SetPassword(user.Password)
+	if err := DB.Model(&User{}).Where("username = ?", user.Username).Update("password_hash", user.PasswordHash).Error; err != nil {
+		return false
+	}
+
+	return true
 }
 
 func (u *User) CreateUser(db *gorm.DB, user User) error {

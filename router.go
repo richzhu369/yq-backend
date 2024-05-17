@@ -10,6 +10,8 @@ func SetupRoutes(router *gin.Engine) {
 		user.POST("/logout", userLogout)
 		user.POST("/new", userCreate)
 		user.DELETE("/delete", userDelete)
+		user.GET("/list", userList)
+		user.POST("/reset",userReset)
 	}
 
 	k8sIngress := router.Group("/api/ingress")
