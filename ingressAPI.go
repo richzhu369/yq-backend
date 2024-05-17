@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 func ingressWhitelist(c *gin.Context) {
@@ -135,6 +136,7 @@ func ChangeWhitelist(ips []string) {
 
 	for _, ingress := range ingressList.Items {
 		wg.Add(1)
+		time.Sleep(500 * time.Millisecond)
 		go func(ingress v1.Ingress) {
 			defer wg.Done()
 			err := AddIPsToWhitelist(ClientSet, ingress.Namespace, ingress.Name, ips)
