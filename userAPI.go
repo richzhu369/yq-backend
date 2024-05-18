@@ -25,7 +25,7 @@ func userLogin(c *gin.Context) {
 	}
 
 	// 密码验证成功，生成 token 并返回
-	token := "admin-token" // 这里应该是生成的 token
+	token := user.Username // 这里应该是生成的 token
 
 	if dbUser.CheckPassword(user.Password, dbUser.PasswordHash) {
 		// 更新登陆时间
@@ -39,6 +39,7 @@ func userLogin(c *gin.Context) {
 			"code": 20000,
 			"data": gin.H{
 				"token": token,
+				"username": user.Username,
 			},
 		})
 	} else {
@@ -142,13 +143,13 @@ func userReset(c *gin.Context) {
 
 	// 进行登录验证逻辑...
 	dbUser := new(User)
-	if err := DB.Where("username = ?", user.Username).First(dbUser).Error; err != nil {
+	if err := DB.Where("username = ?", username).First(dbUser).Error; err != nil {
 		c.JSON(http.StatusOK, gin.H{"code": 60000, "message": "用户不存在"})
 		return
 	}
 
 	// 密码验证成功，生成 token 并返回
-	token := "admin-token" // 这里应该是生成的 token
+	token := username // 这里应该是生成的 token
 
 	dbUser.Username = username
 	dbUser.Password = password

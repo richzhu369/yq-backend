@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -15,11 +16,13 @@ import (
 func ingressWhitelist(c *gin.Context) {
 	ips := c.PostForm("ips")
 	act := c.PostForm("act")
+	username, _ := c.Cookie("Username")
 
 	fmt.Println(ips)
 	fmt.Println(act)
+	fmt.Println(username)
 
-	resIps, resStatus := prepareWhitelist(ips, act)
+	resIps, resStatus := prepareWhitelist(ips, act, username)
 	if !resStatus {
 		c.JSON(http.StatusOK, gin.H{
 			"code":    40003,
@@ -31,6 +34,7 @@ func ingressWhitelist(c *gin.Context) {
 
 	// 这里判断加白操作 是否执行成功
 	ChangeWhitelist(resIps)
+
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    20000,
@@ -45,8 +49,9 @@ func isValidIPv4(ip string) bool {
 }
 
 // 获得数据库中所有的，跟新增或删除的ip组成新是数组，return出来，给ChangeWhitelist 函数
-func prepareWhitelist(ips, act string) (resIps []string, runRes bool) {
+func prepareWhitelist(ips, act, userName string) (resIps []string, runRes bool) {
 	var whiteList []WhiteList
+	var whiteListLog WhitelistLog
 
 	// 创建一个 map 来去重和验证 IP 地址
 	ipMap := make(map[string]bool)
@@ -82,12 +87,18 @@ func prepareWhitelist(ips, act string) (resIps []string, runRes bool) {
 
 	DB.Where("1=1").Delete(&WhiteList{})
 
+
 	var newWhiteLists []WhiteList
 	for _, ip := range resIps {
 		newWhiteLists = append(newWhiteLists, WhiteList{IP: ip})
 	}
 
 	DB.CreateInBatches(newWhiteLists, len(resIps))
+
+	logIps := strings.Join(resIps,",")
+	whiteListLog.OpUser = userName
+	whiteListLog.IP = logIps
+	DB.Create(&whiteListLog)
 
 	return resIps, true
 }
@@ -177,6 +188,54 @@ func fetchAllWhitelist(c *gin.Context) {
 		"data": gin.H{
 			"total": len(allList),
 			"items": allList,
+		},
+	})
+}
+
+//func fetchWhitelistLogs(c *gin.Context) {
+//	var whitelistLogs []WhitelistLog
+//	DB.Find(&whitelistLogs)
+//
+//	c.JSON(http.StatusOK, gin.H{
+//		"code": 20000,
+//		"data": gin.H{
+//			"total": len(whitelistLogs),
+//			"items": whitelistLogs,
+//		},
+//	})
+//}
+func fetchWhitelistLogs(c *gin.Context) {
+	// 分页参数
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	sort := c.DefaultQuery("sort", "+id")
+
+	var whitelistLogs []WhitelistLog
+	var total int64
+
+	// 计算分页的偏移量
+	offset := (page - 1) * limit
+
+	// 排序处理，根据前端传来的参数决定升序还是降序
+	sortOrder := ""
+	if sort[0] == '%' { // 假设传来的是 URL 编码后的 '+'
+		if sort[1] == '2' {
+			sortOrder = "id desc" // 降序
+		}
+	} else {
+		sortOrder = "id" // 默认升序
+	}
+
+	// 查询数据库
+	DB.Order(sortOrder).Offset(offset).Limit(limit).Find(&whitelistLogs)
+	DB.Model(&WhitelistLog{}).Count(&total) // 计算总数
+
+	// 返回 JSON 响应
+	c.JSON(http.StatusOK, gin.H{
+		"code": 20000,
+		"data": gin.H{
+			"total": total,
+			"items": whitelistLogs,
 		},
 	})
 }

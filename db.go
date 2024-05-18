@@ -20,7 +20,6 @@ type User struct {
 type WhitelistLog struct {
 	gorm.Model
 	IP     string `json:"ip"`
-	Act    string `json:"act"`
 	OpUser string `json:"opUser"`
 }
 
