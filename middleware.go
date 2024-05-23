@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// Cors 跨域中间件
+// CORSMiddleware Cors 跨域中间件
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")

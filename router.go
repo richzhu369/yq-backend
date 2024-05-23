@@ -20,4 +20,16 @@ func SetupRoutes(router *gin.Engine) {
 		k8sIngress.GET("/fetchWhitelist", fetchAllWhitelist)
 		k8sIngress.GET("/fetchWhitelistLogs", fetchWhitelistLogs)
 	}
+
+	dynadotApi := router.Group("/api/dynadot")
+	{
+		dynadotApi.GET("/list", dynadotDomainList)
+		dynadotApi.GET("/search", dynadotSearchDomain)
+		dynadotApi.GET("/buy", dynadotBuyDomain)
+	}
+
+	cloudflareAPI := router.Group("/api/cloudflare")
+	{
+		cloudflareAPI.POST("/createZone", cloudflareCreateZone)
+	}
 }
