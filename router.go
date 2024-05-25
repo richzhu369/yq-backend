@@ -11,7 +11,7 @@ func SetupRoutes(router *gin.Engine) {
 		user.POST("/new", userCreate)
 		user.DELETE("/delete", userDelete)
 		user.GET("/list", userList)
-		user.POST("/reset",userReset)
+		user.POST("/reset", userReset)
 	}
 
 	k8sIngress := router.Group("/api/ingress")
@@ -26,10 +26,18 @@ func SetupRoutes(router *gin.Engine) {
 		dynadotApi.GET("/list", dynadotDomainList)
 		dynadotApi.GET("/search", dynadotSearchDomain)
 		dynadotApi.GET("/buy", dynadotBuyDomain)
+		dynadotApi.PATCH("/changeNS", dynadotChangeNS)
 	}
 
 	cloudflareAPI := router.Group("/api/cloudflare")
 	{
 		cloudflareAPI.POST("/createZone", cloudflareCreateZone)
+		cloudflareAPI.GET("/checkZone", cloudflareCheckZone)
+		cloudflareAPI.PUT("/createRecord", cloudflareCreateRecord)
+	}
+
+	awsAPI := router.Group("/api/aws")
+	{
+		awsAPI.POST("/createCloudfront", createCloudFront)
 	}
 }

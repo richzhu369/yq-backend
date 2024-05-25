@@ -17,13 +17,15 @@ type SiteInfo struct {
 	SiteName           string `json:"SiteName"`
 	CloudflareDomainID string `json:"CloudflareDomainID"`
 	Process            string `json:"Process"`
+	CloudflareNS0      string `json:"cloudflareNS0"`
+	CloudflareNS1      string `json:"cloudflareNS1"`
 }
+
 // xxxxd22.xyz
 // xxxxd23.xyz
 func updateSiteInfo(siteInfo SiteInfo) {
 	// 根据传入的 siteInfo.UID 更新
 	DB.Model(&SiteInfo{}).Where("UID = ?", siteInfo.UID).Updates(siteInfo)
-
 }
 
 func insertSiteInfo(siteInfo SiteInfo) {
@@ -32,6 +34,6 @@ func insertSiteInfo(siteInfo SiteInfo) {
 }
 
 func getSiteInfoByUID(UID string) (siteInfo SiteInfo) {
-    DB.Where("UID = ?", UID).First(&siteInfo)
-    return siteInfo
+	DB.Where("UID = ?", UID).First(&siteInfo)
+	return siteInfo
 }

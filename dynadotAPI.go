@@ -131,12 +131,10 @@ func dynadotBuyDomain(c *gin.Context) {
 	log.Println(res)
 
 	if res.String() == "success" {
-		//todo: 这个地方要更新 process字段
-		updateSiteInfo(SiteInfo{
-			UID:     domainUID,
-			Process: "购买完成",
-			Status:  "purchased",
-		})
+		site.UID = domainUID
+		site.Process = "购买完成"
+		site.Status = "purchased"
+		updateSiteInfo(site)
 		c.JSON(http.StatusOK, gin.H{
 			"code": 20000,
 			"data": gin.H{
@@ -162,13 +160,13 @@ func dynadotBuyDomain(c *gin.Context) {
 	}
 }
 
-
-// todo: 完善这个功能，更改NS服务器
 func dynadotChangeNS(c *gin.Context) {
 	domainUID := c.PostForm("domainUID")
+	fmt.Println(domainUID)
 	site := getSiteInfoByUID(domainUID)
 
-	url := "https://api.dynadot.com/api3.json?key=pE8G6Q608b8a6l8x7C6u7oR6fU6V7t8t6Y746g656S7i&command=register&domain=" + site.Domain + "&duration=1&currency=USD"
+	url := "https://api.dynadot.com/api3.json?key=pE8G6Q608b8a6l8x7C6u7oR6fU6V7t8t6Y746g656S7i&command=set_ns&domain=" + site.Domain + "&ns0=" + site.CloudflareNS0 + "&ns1=" + site.CloudflareNS1
+
 	fmt.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -179,4 +177,33 @@ func dynadotChangeNS(c *gin.Context) {
 	body, _ := io.ReadAll(resp.Body)
 
 	log.Println(string(body))
+
+	res := gjson.Get(string(body), "SetNsResponse.Status").String()
+	if res == "success" {
+		site.Process = "NS服务器更改完成"
+		site.Status = "nsChanged"
+		updateSiteInfo(site)
+
+		c.JSON(http.StatusOK, gin.H{
+			"code": 20000,
+			"data": gin.H{
+				"message":   "NS服务器更改成功",
+				"res":       "success",
+				"domainUDI": site.UID,
+			},
+		})
+	} else {
+		site.Process = "NS服务器更改失败"
+		site.Status = "nsChangeFailed"
+		updateSiteInfo(site)
+
+		c.JSON(http.StatusOK, gin.H{
+			"code": 40001,
+			"data": gin.H{
+				"message": "NS服务器更改失败",
+				"res":     "failed",
+				"reason":  res,
+			},
+		})
+	}
 }
