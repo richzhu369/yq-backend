@@ -3,12 +3,14 @@ package main
 import (
 	"flag"
 	"github.com/gin-gonic/gin"
+	"github.com/tidwall/gjson"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/flowcontrol"
 	"log"
+	"os"
 )
 
 var kubeconfig *string
@@ -16,8 +18,8 @@ var DB *gorm.DB
 var ERR error
 var ClientSet *kubernetes.Clientset
 
-const AwsAK = "AKIAUIUNFZ2WZZIQ6TNC"
-const AwsSK = "1m41PBiFkxh5UloUY06sVvkQztUtnH+VgHyEcYMi"
+var AwsAK string
+var AwsSK string
 
 func init() {
 	// 从命令行参数中获取 kubeconfig 文件路径
@@ -46,6 +48,16 @@ func init() {
 	// 创建 Kubernetes 客户端
 	ClientSet, ERR = kubernetes.NewForConfig(config)
 
+	// 获取aws配置
+	awsConfigPath := ".config"
+	data,err := os.ReadFile(awsConfigPath)
+	if err!=nil{
+		panic(err.Error())
+	}
+
+	jsonStr := string(data)
+	AwsAK = gjson.Get(jsonStr,"AWS_ACCESS_KEY_ID").String()
+	AwsSK = gjson.Get(jsonStr,"AWS_SECRET_ACCESS_KEY").String()
 }
 
 func main() {
