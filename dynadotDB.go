@@ -19,6 +19,11 @@ type SiteInfo struct {
 	Process            string `json:"Process"`
 	CloudflareNS0      string `json:"cloudflareNS0"`
 	CloudflareNS1      string `json:"cloudflareNS1"`
+	AwsSSLArn          string `json:"AwsSSLArn"`
+	CnameKey           string `json:"CnameKey"`
+	CnameValue         string `json:"CnameValue"`
+	CloudFrontID       string `json:"CloudFrontID"`
+	CloudfrontRecord   string `json:"CloudfrontRecord"`
 }
 
 // xxxxd22.xyz

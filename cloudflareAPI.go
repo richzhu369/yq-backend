@@ -123,7 +123,7 @@ func cloudflareForceCheck(domainUID string) {
 
 }
 
-func cloudflareCreateRecord(c *gin.Context) {
+func cloudflareCreateRootRecord(c *gin.Context) {
 	domainUID := c.PostForm("domainUID")
 	site := getSiteInfoByUID(domainUID)
 
@@ -168,5 +168,99 @@ func cloudflareCreateRecord(c *gin.Context) {
 			},
 		})
 	}
+}
 
+
+func cloudflareCreateSSLRecord(c *gin.Context) {
+	domainUID := c.PostForm("domainUID")
+	site := getSiteInfoByUID(domainUID)
+
+	url := "https://api.cloudflare.com/client/v4/zones/" + site.CloudflareDomainID + "/dns_records"
+
+	payload := strings.NewReader("{\n  \"content\": \""+site.CnameValue+"\",\n  \"name\": \""+site.CnameKey+"\",\n  \"proxied\": false,\n  \"type\": \"CNAME\",\n  \"comment\": \"由yq-devops平台创建\",\n \"ttl\": 60\n}")
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer Y6U_-NFZ-ww7xeybO3WmZqeJesj7GAkoWx4d9rL_")
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := io.ReadAll(res.Body)
+
+	fmt.Println(string(body))
+	getRes := gjson.Get(string(body), "success")
+	if getRes.String() == "true" {
+		site.Process = "新建SSL CNAME记录"
+		site.Status = "create SSL CNAME to Cloudflare"
+		updateSiteInfo(site)
+
+		c.JSON(http.StatusOK, gin.H{
+			"code": 20000,
+			"data": gin.H{
+				"res":     "success",
+				"message": "新建CNAME记录成功",
+			},
+		})
+	} else {
+		site.Process = "新建CNAME记录失败"
+		site.Status = "failedCreateCNAMEtoCloudflare"
+		updateSiteInfo(site)
+		c.JSON(http.StatusOK, gin.H{
+			"code": 20000,
+			"data": gin.H{
+				"message": "新建CNAME记录失败",
+				"res":     "failed",
+				"error":   gjson.Get(string(body), "errors").String(),
+			},
+		})
+	}
+}
+
+func cloudflareCreateCloudfrontRecord(c *gin.Context) {
+	domainUID := c.PostForm("domainUID")
+	site := getSiteInfoByUID(domainUID)
+
+	url := "https://api.cloudflare.com/client/v4/zones/" + site.CloudflareDomainID + "/dns_records"
+
+	payload := strings.NewReader("{\n  \"content\": \""+site.CloudfrontRecord+"\",\n  \"name\": \""+site.AwsCdnDomain+"\",\n  \"proxied\": false,\n  \"type\": \"CNAME\",\n  \"comment\": \"由yq-devops平台创建\",\n \"ttl\": 60\n}")
+
+	req, _ := http.NewRequest("POST", url, payload)
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", "Bearer Y6U_-NFZ-ww7xeybO3WmZqeJesj7GAkoWx4d9rL_")
+
+	res, _ := http.DefaultClient.Do(req)
+
+	defer res.Body.Close()
+	body, _ := io.ReadAll(res.Body)
+
+	fmt.Println(string(body))
+	getRes := gjson.Get(string(body), "success")
+	if getRes.String() == "true" {
+		site.Process = "新建CloudFront CNAME记录"
+		site.Status = "create CloudFront CNAME to Cloudflare"
+		updateSiteInfo(site)
+
+		c.JSON(http.StatusOK, gin.H{
+			"code": 20000,
+			"data": gin.H{
+				"res":     "success",
+				"message": "新建CloudFront CNAME记录成功",
+			},
+		})
+	} else {
+		site.Process = "新建CloudFront CNAME记录失败"
+		site.Status = "failedCreateCloudFront CNAMEtoCloudflare"
+		updateSiteInfo(site)
+		c.JSON(http.StatusOK, gin.H{
+			"code": 20000,
+			"data": gin.H{
+				"message": "新建CloudFront CNAME记录失败",
+				"res":     "failed",
+				"error":   gjson.Get(string(body), "errors").String(),
+			},
+		})
+	}
 }

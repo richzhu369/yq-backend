@@ -33,11 +33,17 @@ func SetupRoutes(router *gin.Engine) {
 	{
 		cloudflareAPI.POST("/createZone", cloudflareCreateZone)
 		cloudflareAPI.GET("/checkZone", cloudflareCheckZone)
-		cloudflareAPI.PUT("/createRecord", cloudflareCreateRecord)
+		cloudflareAPI.PUT("/createRootRecord", cloudflareCreateRootRecord)
+		cloudflareAPI.PUT("/createSSLRecord", cloudflareCreateSSLRecord)
+		cloudflareAPI.PUT("/cloudflareCreateCloudfrontRecord", cloudflareCreateCloudfrontRecord)
 	}
 
 	awsAPI := router.Group("/api/aws")
 	{
 		awsAPI.POST("/createCloudfront", createCloudFront)
+		awsAPI.POST("/createSSL", createSSL)
+		awsAPI.GET("/getSSLVerifyInfo", GetSSLVerifyInfo)
+		awsAPI.GET("/getSSLStatus", GetSSLStatus)
+		awsAPI.GET("/getCloudFrontDomain", GetCloudFrontDomain)
 	}
 }

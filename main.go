@@ -16,6 +16,9 @@ var DB *gorm.DB
 var ERR error
 var ClientSet *kubernetes.Clientset
 
+const AwsAK = "AKIAUIUNFZ2WZZIQ6TNC"
+const AwsSK = "1m41PBiFkxh5UloUY06sVvkQztUtnH+VgHyEcYMi"
+
 func init() {
 	// 从命令行参数中获取 kubeconfig 文件路径
 	kubeconfig = flag.String("kubeconfig", "", "Path to the kubeconfig file")
