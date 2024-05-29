@@ -46,4 +46,14 @@ func SetupRoutes(router *gin.Engine) {
 		awsAPI.GET("/getSSLStatus", GetSSLStatus)
 		awsAPI.GET("/getCloudFrontDomain", GetCloudFrontDomain)
 	}
+
+	rocketmqAPI := router.Group("/api/rocketmq")
+	{
+		rocketmqAPI.POST("/createTopic", createTopic)
+	}
+
+	publicPropertyAPI := router.Group("/api/publicProperty")
+	{
+		publicPropertyAPI.GET("/get", getPublicProperty)
+	}
 }

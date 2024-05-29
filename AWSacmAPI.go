@@ -18,7 +18,7 @@ func createSSL(c *gin.Context) {
 
 	// 加载 AWS 配置
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(AwsAK, AwsSK, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(publicProperty.AwsAK, publicProperty.AwsSK, "")),
 	)
 	if err != nil {
 		log.Printf("Unable to load SDK config, %v", err)
@@ -58,7 +58,7 @@ func GetSSLVerifyInfo(c *gin.Context) {
 
 	// 加载 AWS 配置
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("sa-east-1"),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(AwsAK, AwsSK, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(publicProperty.AwsAK, publicProperty.AwsSK, "")),
 	)
 	if err != nil {
 		log.Printf("Unable to load SDK config, %v", err)
@@ -114,7 +114,7 @@ func GetSSLStatus(c *gin.Context) {
 
 	// 加载 AWS 配置
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(AwsAK, AwsSK, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(publicProperty.AwsAK, publicProperty.AwsSK, "")),
 	)
 	if err != nil {
 		log.Printf("Unable to load SDK config, %v", err)

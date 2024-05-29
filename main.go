@@ -3,23 +3,19 @@ package main
 import (
 	"flag"
 	"github.com/gin-gonic/gin"
-	"github.com/tidwall/gjson"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/flowcontrol"
 	"log"
-	"os"
 )
 
 var kubeconfig *string
 var DB *gorm.DB
 var ERR error
 var ClientSet *kubernetes.Clientset
-
-var AwsAK string
-var AwsSK string
+var publicProperty PublicProperty
 
 func init() {
 	// 从命令行参数中获取 kubeconfig 文件路径
@@ -33,7 +29,7 @@ func init() {
 	}
 
 	// 自动迁移模式
-	ERR = DB.AutoMigrate(&User{}, &WhiteList{}, &WhitelistLog{}, &SiteInfo{})
+	ERR = DB.AutoMigrate(&User{}, &WhiteList{}, &WhitelistLog{}, &SiteInfo{}, &PublicProperty{})
 	if ERR != nil {
 		log.Fatal("failed to migrate database: ", ERR)
 	}
@@ -48,16 +44,8 @@ func init() {
 	// 创建 Kubernetes 客户端
 	ClientSet, ERR = kubernetes.NewForConfig(config)
 
-	// 获取aws配置
-	awsConfigPath := ".config"
-	data,err := os.ReadFile(awsConfigPath)
-	if err!=nil{
-		panic(err.Error())
-	}
+	DB.Find(&publicProperty)
 
-	jsonStr := string(data)
-	AwsAK = gjson.Get(jsonStr,"AWS_ACCESS_KEY_ID").String()
-	AwsSK = gjson.Get(jsonStr,"AWS_SECRET_ACCESS_KEY").String()
 }
 
 func main() {

@@ -18,7 +18,7 @@ func createCloudFront(c *gin.Context) {
 
 	// 加载 AWS 配置
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("sa-east-1"),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(AwsAK, AwsSK, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(publicProperty.AwsAK, publicProperty.AwsSK, "")),
 	)
 	if err != nil {
 		log.Fatalf("Unable to load SDK config, %v", err)
@@ -36,7 +36,7 @@ func createCloudFront(c *gin.Context) {
 				Items:    []string{site.AwsCdnDomain},
 			},
 			DefaultCacheBehavior: &types.DefaultCacheBehavior{
-				TargetOriginId:        aws.String("af400c4b64edf4620810c92cd5dd5d82-499673083.sa-east-1.elb.amazonaws.com"),
+				TargetOriginId:        aws.String(publicProperty.SourceELB),
 				ViewerProtocolPolicy:  "redirect-to-https",
 				CachePolicyId:         aws.String("4135ea2d-6df8-44a3-9df3-4b5a84be39ad"),
 				OriginRequestPolicyId: aws.String("216adef6-5c7f-47e4-b989-5492eafa07d3"),
@@ -64,8 +64,8 @@ func createCloudFront(c *gin.Context) {
 				Quantity: aws.Int32(1),
 				Items: []types.Origin{
 					{
-						Id:         aws.String("af400c4b64edf4620810c92cd5dd5d82-499673083.sa-east-1.elb.amazonaws.com"),
-						DomainName: aws.String("af400c4b64edf4620810c92cd5dd5d82-499673083.sa-east-1.elb.amazonaws.com"),
+						Id:         aws.String(publicProperty.SourceELB),
+						DomainName: aws.String(publicProperty.SourceELB),
 						CustomOriginConfig: &types.CustomOriginConfig{
 							HTTPPort:             aws.Int32(80),
 							HTTPSPort:            aws.Int32(443),
@@ -115,7 +115,7 @@ func GetCloudFrontDomain(c *gin.Context) {
 
 	// 加载 AWS 配置
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("sa-east-1"),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(AwsAK, AwsSK, "")),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(publicProperty.AwsAK, publicProperty.AwsSK, "")),
 	)
 	if err != nil {
 		log.Printf("Unable to load SDK config, %v\n", err)
