@@ -1,0 +1,82 @@
+lang = "bs"
+prefix = "SITE_NAME"
+is_dev = true
+sock5 = "172.31.42.104:38080"
+fcallback = "https://CW_DOMAIN"
+ipdb = "/src/goproject/IPV6-COUNTRY-REGION-CITY.BIN"
+index_url = "https://"
+gcs_domain = "https://"
+rocketmq = [ "172.31.39.36:9876","172.31.43.208:9876"]
+game_rpc  = "http://rpc.SITE_NAME:9993"
+ip_server = "http://k8s-br-ipvalida-54c5225ee1-850fefafd8a46c41.elb.sa-east-1.amazonaws.com:7896"
+deposit_st = "2024-05-01 00:00:00"
+deposit_limit = "16000"
+deposit_user = "YQ财务"
+automatic = 1
+pgmk_open = true
+deposit_manual = 1
+platform_url = "/bs/platform_3.toml"
+
+[db]
+#每个服务单独的数据库,用户名和密码.以后有问题好排查是哪个服务出现的问题
+
+member = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57?charset=utf8&parseTime=True&loc=Local"
+merchant = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57?charset=utf8&parseTime=True&loc=Local"
+game = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57?charset=utf8&parseTime=True&loc=Local"
+promo = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57?charset=utf8&parseTime=True&loc=Local"
+finance = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57?charset=utf8&parseTime=True&loc=Local"
+report = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57?charset=utf8&parseTime=True&loc=Local"
+task = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57?charset=utf8&parseTime=True&loc=Local"
+bet = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57_order?charset=utf8&parseTime=True&loc=Local"
+vncp = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(br-prod-proxysql-3ad3e4ba54c55972.elb.sa-east-1.amazonaws.com:6033)/d57?charset=utf8&parseTime=True&loc=Local"
+
+starrocks = "Yt6gc8yvbwrWeCb:x89bq8YMaGZrg6eMbjSu@tcp(central-starrocks-6-c17a9c1ebf280ae8.elb.sa-east-1.amazonaws.com:9030)/d57?charset=utf8&parseTime=True&loc=Local"
+zkt = "c5Q5uzbhYAyZHYf:4MpMYDBBcty5QkURDFvV@tcp(br-z2-proxysqlb-8aead3a64873c0f0.elb.sa-east-1.amazonaws.com:6033)/zkt?charset=utf8&parseTime=True&loc=Local"
+zksr = "c5Q5uzbhYAyZHYf:4MpMYDBBcty5QkURDFvV@tcp(central-starrocks-5-960727c12a4e57fb.elb.sa-east-1.amazonaws.com:9030)/sr_zkt?charset=utf8&parseTime=True&loc=Local"
+max_idle_conn = 10
+max_open_conn = 10
+
+
+[redis]
+addr = ["br-redis-headless.redis.svc.cluster.local:26379"]
+password = "8PLzfUuHRLsS"
+sentinel = "br_redis"
+db = REDIS_NUM
+
+#[pika]
+#addr = ["192.168.142.138:26379"]
+#password = "tz95cu74r3d9hzcqx28b"
+#sentinel = "yq_redis"
+#db = 1
+
+[mqtt]
+host = ["tcp://a5175cad3a67d45c9ab0597382790365-1212270961.sa-east-1.elb.amazonaws.com:1883"]
+username = "superuser"
+password = "www.123.com"
+
+[zinc]
+url = "http://172.31.1.27:4080"
+username = "yqprod"
+password = "WWW.123.com"
+
+[mongodb]
+url = "mongodb://172.31.3.228:27017,172.31.12.126:27017,172.31.9.20:27017/?replicaSet=mgr"
+username = "Yt6gc8yvbwrWeCb"
+password = "x89bq8YMaGZrg6eMbjSu"
+db = "d57"
+
+#[meilisearch]
+#host = "http://127.0.0.1:7700"
+#key = "aSampleMasterKey"
+
+[aws]
+bucket    = "yq-brasil-prod"
+accessKeyID = "AKIAUIUNFZ2W5V6YGKO6"
+secretAccessKey = "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"
+
+[port]
+game = ":9991"
+game_rpc = ":9993"
+member = ":8357"
+merchant = ":8358"
+ip_rpc = ":7896"

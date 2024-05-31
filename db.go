@@ -14,5 +14,6 @@ type PublicProperty struct {
 	MQTopics      string `json:"MQTopics"`
 	MQBroker      string `json:"MQBroker"`
 	RedisServer   string `json:"RedisServer"`
-	RedisDBNumber string `json:"RedisDBNumber"`
+	RedisDBNumber int32 `json:"RedisDBNumber"`
+	ETCDServer    string `json:"ETCDServer"`
 }
