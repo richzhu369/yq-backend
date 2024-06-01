@@ -55,6 +55,7 @@ func SetupRoutes(router *gin.Engine) {
 	publicPropertyAPI := router.Group("/api/publicProperty")
 	{
 		publicPropertyAPI.GET("/get", getPublicProperty)
+		publicPropertyAPI.POST("/edit", editPublicProperty)
 	}
 
 	etcdAPI := router.Group("/api/etcd")
