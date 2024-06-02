@@ -19,9 +19,7 @@ func getPublicProperty(c *gin.Context) {
 	})
 }
 
-// 这里改成同时传来字段和值，然后根据字段名称，更新值
 func editPublicProperty(c *gin.Context) {
-	//var publicProperty PublicProperty
 
 	jsonData, err := c.GetRawData()
 	if err != nil {

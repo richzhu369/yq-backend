@@ -147,7 +147,8 @@ func ChangeWhitelist(ips []string) {
 
 	for _, ingress := range ingressList.Items {
 		wg.Add(1)
-		time.Sleep(50 * time.Millisecond)
+		//sleep减速，太快了 aws的k8s受不了
+		time.Sleep(100 * time.Millisecond)
 		go func(ingress v1.Ingress) {
 			defer wg.Done()
 			err := AddIPsToWhitelist(ClientSet, ingress.Namespace, ingress.Name, ips)
