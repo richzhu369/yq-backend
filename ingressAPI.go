@@ -35,7 +35,6 @@ func ingressWhitelist(c *gin.Context) {
 	// 这里判断加白操作 是否执行成功
 	ChangeWhitelist(resIps)
 
-
 	c.JSON(http.StatusOK, gin.H{
 		"code":    20000,
 		"message": "操作完成.",
@@ -87,7 +86,6 @@ func prepareWhitelist(ips, act, userName string) (resIps []string, runRes bool) 
 
 	DB.Where("1=1").Delete(&WhiteList{})
 
-
 	var newWhiteLists []WhiteList
 	for _, ip := range resIps {
 		newWhiteLists = append(newWhiteLists, WhiteList{IP: ip})
@@ -95,7 +93,7 @@ func prepareWhitelist(ips, act, userName string) (resIps []string, runRes bool) 
 
 	DB.CreateInBatches(newWhiteLists, len(resIps))
 
-	logIps := strings.Join(resIps,",")
+	logIps := strings.Join(resIps, ",")
 	whiteListLog.OpUser = userName
 	whiteListLog.IP = logIps
 	DB.Create(&whiteListLog)
@@ -193,18 +191,6 @@ func fetchAllWhitelist(c *gin.Context) {
 	})
 }
 
-//func fetchWhitelistLogs(c *gin.Context) {
-//	var whitelistLogs []WhitelistLog
-//	DB.Find(&whitelistLogs)
-//
-//	c.JSON(http.StatusOK, gin.H{
-//		"code": 20000,
-//		"data": gin.H{
-//			"total": len(whitelistLogs),
-//			"items": whitelistLogs,
-//		},
-//	})
-//}
 func fetchWhitelistLogs(c *gin.Context) {
 	// 分页参数
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -237,6 +223,16 @@ func fetchWhitelistLogs(c *gin.Context) {
 		"data": gin.H{
 			"total": total,
 			"items": whitelistLogs,
+		},
+	})
+}
+
+func getIngressStatus(c *gin.Context) {
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 20000,
+		"data": gin.H{
+			"res": "done",
 		},
 	})
 }

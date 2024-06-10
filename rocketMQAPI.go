@@ -5,17 +5,14 @@ import (
 	"fmt"
 	"github.com/apache/rocketmq-client-go/v2/admin"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
-	"github.com/gin-gonic/gin"
 	"log"
-	"net/http"
 	"strings"
 )
 
-func createTopic(c *gin.Context) {
-	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+func createTopic(merchantName string) bool {
+	site := getMerchantByName(merchantName)
 
-	replacedStr := strings.ReplaceAll(publicProperty.MQTopics, "NAME", site.SiteName)
+	replacedStr := strings.ReplaceAll(publicProperty.MQTopics, "NAME", site.MerchantName)
 	topicsArr := strings.Split(replacedStr, ",")
 
 	log.Println("准备要创建的topics", topicsArr)
@@ -56,17 +53,12 @@ func createTopic(c *gin.Context) {
 	verifyRes := isASubsetOfB(topicsArr, topicList.TopicList)
 
 	if verifyRes {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    20000,
-			"res":     "success",
-			"message": "创建topics 成功",
-		})
+		upgradeProgress(13, merchantName, "el-icon-success", "primary")
+		upgradeProgress(14, merchantName, "el-icon-loading", "primary")
+		return true
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    20000,
-			"res":     "failed",
-			"message": "创建topics 失败",
-		})
+		upgradeProgress(13, merchantName, "el-icon-danger", "primary")
+		return false
 	}
 }
 

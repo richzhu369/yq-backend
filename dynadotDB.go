@@ -4,9 +4,8 @@ import (
 	"gorm.io/gorm"
 )
 
-type SiteInfo struct {
+type MerchantInfo struct {
 	gorm.Model
-	UID                string `json:"UID" gorm:"size:64,unique"`
 	Status             string `json:"status"`
 	Domain             string `json:"Domain"`
 	CwDomain           string `json:"CwDomain"`
@@ -14,7 +13,7 @@ type SiteInfo struct {
 	CfDomain           string `json:"CfDomain"`
 	MqTopic            string `json:"MqTopic"`
 	MerchantCode       string `json:"MerchantCode"`
-	SiteName           string `json:"SiteName"`
+	MerchantName       string `json:"MerchantName"`
 	CloudflareDomainID string `json:"CloudflareDomainID"`
 	Process            string `json:"Process"`
 	CloudflareNS0      string `json:"cloudflareNS0"`
@@ -26,19 +25,17 @@ type SiteInfo struct {
 	CloudfrontRecord   string `json:"CloudfrontRecord"`
 }
 
-// xxxxd22.xyz
-// xxxxd23.xyz
-func updateSiteInfo(siteInfo SiteInfo) {
-	// 根据传入的 siteInfo.UID 更新
-	DB.Model(&SiteInfo{}).Where("UID = ?", siteInfo.UID).Updates(siteInfo)
+func updateMerchantInfo(merchant MerchantInfo) {
+	// 根据传入的 merchant.UID 更新
+	DB.Model(&MerchantInfo{}).Where("merchant_name = ?", merchant.MerchantName).Updates(merchant)
 }
 
-func insertSiteInfo(siteInfo SiteInfo) {
+func  insertMerchantInfo(merchant MerchantInfo) {
 	// siteInfo 是您要更新的实例，并且它的 ID 已经设置
-	DB.Create(&siteInfo)
+	DB.Create(&merchant)
 }
 
-func getSiteInfoByUID(UID string) (siteInfo SiteInfo) {
-	DB.Where("UID = ?", UID).First(&siteInfo)
-	return siteInfo
+func getMerchantByName(merchantName string) (merchant MerchantInfo) {
+	DB.Where("merchant_name = ?", merchantName).First(&merchant)
+	return merchant
 }

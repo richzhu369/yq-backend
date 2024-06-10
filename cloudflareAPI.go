@@ -2,19 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 )
 
-func cloudflareCreateZone(c *gin.Context) {
+func cloudflareCreateZone(merchantName string) bool {
 
 	url := "https://api.cloudflare.com/client/v4/zones"
 
-	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+	site := getMerchantByName(merchantName)
 
 	payload := strings.NewReader("{\n  \"account\": {\n    \"id\": \"08658db65e224f04a7315d0e4e55ec89\"\n  },\n  \"name\": \"" + site.Domain + "\",\n  \"type\": \"full\"\n}")
 
@@ -37,32 +36,19 @@ func cloudflareCreateZone(c *gin.Context) {
 		site.CloudflareDomainID = gjson.Get(string(body), "result.id").String()
 		site.Process = "添加域名到cloudflare"
 		site.Status = "addDomainToCloudflare"
-		updateSiteInfo(site)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"res":          "success",
-				"message":      "创建站点成功",
-				"cfSiteStatus": gjson.Get(string(body), "result.status").String(),
-				"domainId":     site.CloudflareDomainID,
-				"domainUDI":    site.UID,
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(3, merchantName, "el-icon-success", "primary")
+		upgradeProgress(4, merchantName, "el-icon-loading", "primary")
+		return true
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"res":     "failed",
-			"code":    40001,
-			"message": "创建站点失败",
-			"reason":  gjson.Get(string(body), "errors.0.message").String(),
-		})
+		upgradeProgress(3, merchantName, "el-icon-danger", "primary")
+		return false
 	}
 }
 
-func cloudflareCheckZone(c *gin.Context) {
+func cloudflareCheckZone(merchantName string) bool {
 
-	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+	site := getMerchantByName(merchantName)
 
 	url := "https://api.cloudflare.com/client/v4/zones/" + site.CloudflareDomainID
 
@@ -82,33 +68,19 @@ func cloudflareCheckZone(c *gin.Context) {
 		// 更新域名信息
 		site.Process = "检车站点是否pending"
 		site.Status = "checkSiteStatus"
-		updateSiteInfo(site)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"res":          "failed",
-				"message":      "站点激活成功",
-				"cfSiteStatus": gjson.Get(string(body), "result.status").String(),
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(5, merchantName, "el-icon-success", "primary")
+		upgradeProgress(6, merchantName, "el-icon-loading", "primary")
+		return true
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"res":     "failed",
-				"message": "站点pending中，请等待",
-				"error1":  gjson.Get(string(body), "errors").String(),
-				"error2":  gjson.Get(string(body), "messages").String(),
-			},
-		})
+		upgradeProgress(5, merchantName, "el-icon-danger", "primary")
+		return false
 	}
-
 }
 
 // 手动再次触发NS检测，暂时无用
 func cloudflareForceCheck(domainUID string) {
-	site := getSiteInfoByUID(domainUID)
+	site := getMerchantByName(domainUID)
 
 	url := "https://api.cloudflare.com/client/v4/zones/" + site.CloudflareDomainID + "/activation_check"
 
@@ -123,9 +95,10 @@ func cloudflareForceCheck(domainUID string) {
 
 }
 
-func cloudflareCreateRootRecord(c *gin.Context) {
-	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+// cloudflareCreateRootRecord 创建CNAME记录* 到 aws的lb
+func cloudflareCreateRootRecord(merchantName string) bool {
+
+	site := getMerchantByName(merchantName)
 
 	url := "https://api.cloudflare.com/client/v4/zones/" + site.CloudflareDomainID + "/dns_records"
 
@@ -146,38 +119,25 @@ func cloudflareCreateRootRecord(c *gin.Context) {
 	if getRes.String() == "true" {
 		site.Process = "新建CNAME记录"
 		site.Status = "createCNAMEtoCloudflare"
-		updateSiteInfo(site)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"res":     "success",
-				"message": "新建CNAME记录成功",
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(6, merchantName, "el-icon-success", "primary")
+		upgradeProgress(7, merchantName, "el-icon-loading", "primary")
+		return true
 	} else {
 		site.Process = "新建CNAME记录失败"
 		site.Status = "failedCreateCNAMEtoCloudflare"
-		updateSiteInfo(site)
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"message": "新建CNAME记录失败",
-				"res":     "failed",
-				"error":   gjson.Get(string(body), "errors").String(),
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(6, merchantName, "el-icon-danger", "primary")
+		return false
 	}
 }
 
-
-func cloudflareCreateSSLRecord(c *gin.Context) {
-	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+func cloudflareCreateSSLRecord(merchantName string) bool {
+	site := getMerchantByName(merchantName)
 
 	url := "https://api.cloudflare.com/client/v4/zones/" + site.CloudflareDomainID + "/dns_records"
 
-	payload := strings.NewReader("{\n  \"content\": \""+site.CnameValue+"\",\n  \"name\": \""+site.CnameKey+"\",\n  \"proxied\": false,\n  \"type\": \"CNAME\",\n  \"comment\": \"由yq-devops平台创建\",\n \"ttl\": 60\n}")
+	payload := strings.NewReader("{\n  \"content\": \"" + site.CnameValue + "\",\n  \"name\": \"" + site.CnameKey + "\",\n  \"proxied\": false,\n  \"type\": \"CNAME\",\n  \"comment\": \"由yq-devops平台创建\",\n \"ttl\": 60\n}")
 
 	req, _ := http.NewRequest("POST", url, payload)
 
@@ -189,42 +149,31 @@ func cloudflareCreateSSLRecord(c *gin.Context) {
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
-	fmt.Println(string(body))
+	log.Println(string(body))
 	getRes := gjson.Get(string(body), "success")
 	if getRes.String() == "true" {
 		site.Process = "新建SSL CNAME记录"
 		site.Status = "create SSL CNAME to Cloudflare"
-		updateSiteInfo(site)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"res":     "success",
-				"message": "新建CNAME记录成功",
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(9, merchantName, "el-icon-success", "primary")
+		upgradeProgress(10, merchantName, "el-icon-loading", "primary")
+		return true
 	} else {
 		site.Process = "新建CNAME记录失败"
 		site.Status = "failedCreateCNAMEtoCloudflare"
-		updateSiteInfo(site)
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"message": "新建CNAME记录失败",
-				"res":     "failed",
-				"error":   gjson.Get(string(body), "errors").String(),
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(9, merchantName, "el-icon-danger", "primary")
+		return false
 	}
 }
 
-func cloudflareCreateCloudfrontRecord(c *gin.Context) {
-	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+func cloudflareCreateCloudfrontRecord(merchantName string) bool {
+
+	site := getMerchantByName(merchantName)
 
 	url := "https://api.cloudflare.com/client/v4/zones/" + site.CloudflareDomainID + "/dns_records"
 
-	payload := strings.NewReader("{\n  \"content\": \""+site.CloudfrontRecord+"\",\n  \"name\": \""+site.AwsCdnDomain+"\",\n  \"proxied\": false,\n  \"type\": \"CNAME\",\n  \"comment\": \"由yq-devops平台创建\",\n \"ttl\": 60\n}")
+	payload := strings.NewReader("{\n  \"content\": \"" + site.CloudfrontRecord + "\",\n  \"name\": \"" + site.AwsCdnDomain + "\",\n  \"proxied\": false,\n  \"type\": \"CNAME\",\n  \"comment\": \"由yq-devops平台创建\",\n \"ttl\": 60\n}")
 
 	req, _ := http.NewRequest("POST", url, payload)
 
@@ -236,31 +185,20 @@ func cloudflareCreateCloudfrontRecord(c *gin.Context) {
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
 
-	fmt.Println(string(body))
+	log.Println(string(body))
 	getRes := gjson.Get(string(body), "success")
 	if getRes.String() == "true" {
 		site.Process = "新建CloudFront CNAME记录"
 		site.Status = "create CloudFront CNAME to Cloudflare"
-		updateSiteInfo(site)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"res":     "success",
-				"message": "新建CloudFront CNAME记录成功",
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(12, merchantName, "el-icon-success", "primary")
+		upgradeProgress(13, merchantName, "el-icon-success", "primary")
+		return true
 	} else {
 		site.Process = "新建CloudFront CNAME记录失败"
 		site.Status = "failedCreateCloudFront CNAMEtoCloudflare"
-		updateSiteInfo(site)
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"message": "新建CloudFront CNAME记录失败",
-				"res":     "failed",
-				"error":   gjson.Get(string(body), "errors").String(),
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(12, merchantName, "el-icon-danger", "primary")
+		return false
 	}
 }

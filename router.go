@@ -19,38 +19,39 @@ func SetupRoutes(router *gin.Engine) {
 		k8sIngress.POST("/whitelist", ingressWhitelist)
 		k8sIngress.GET("/fetchWhitelist", fetchAllWhitelist)
 		k8sIngress.GET("/fetchWhitelistLogs", fetchWhitelistLogs)
+		k8sIngress.GET("/getStatus", getIngressStatus)
 	}
 
 	dynadotApi := router.Group("/api/dynadot")
 	{
 		dynadotApi.GET("/list", dynadotDomainList)
-		dynadotApi.GET("/search", dynadotSearchDomain)
-		dynadotApi.GET("/buy", dynadotBuyDomain)
-		dynadotApi.PATCH("/changeNS", dynadotChangeNS)
+		//dynadotApi.GET("/search", dynadotSearchDomain)
+		//dynadotApi.GET("/buy", dynadotBuyDomain)
+		//dynadotApi.PATCH("/changeNS", dynadotChangeNS)
 	}
 
-	cloudflareAPI := router.Group("/api/cloudflare")
-	{
-		cloudflareAPI.POST("/createZone", cloudflareCreateZone)
-		cloudflareAPI.GET("/checkZone", cloudflareCheckZone)
-		cloudflareAPI.PUT("/createRootRecord", cloudflareCreateRootRecord)
-		cloudflareAPI.PUT("/createSSLRecord", cloudflareCreateSSLRecord)
-		cloudflareAPI.PUT("/cloudflareCreateCloudfrontRecord", cloudflareCreateCloudfrontRecord)
-	}
+	//cloudflareAPI := router.Group("/api/cloudflare")
+	//{
+	//	cloudflareAPI.POST("/createZone", cloudflareCreateZone)
+	//	cloudflareAPI.GET("/checkZone", cloudflareCheckZone)
+	//	cloudflareAPI.PUT("/createRootRecord", cloudflareCreateRootRecord)
+	//	cloudflareAPI.PUT("/createSSLRecord", cloudflareCreateSSLRecord)
+	//	cloudflareAPI.PUT("/cloudflareCreateCloudfrontRecord", cloudflareCreateCloudfrontRecord)
+	//}
 
 	awsAPI := router.Group("/api/aws")
 	{
-		awsAPI.POST("/createCloudfront", createCloudFront)
-		awsAPI.POST("/createSSL", createSSL)
-		awsAPI.GET("/getSSLVerifyInfo", GetSSLVerifyInfo)
-		awsAPI.GET("/getSSLStatus", GetSSLStatus)
+		//awsAPI.POST("/createCloudfront", createCloudFront)
+		//awsAPI.POST("/createSSL", createSSL)
+		//awsAPI.GET("/getSSLVerifyInfo", GetSSLVerifyInfo)
+		//awsAPI.GET("/getSSLStatus", GetSSLStatus)
 		awsAPI.GET("/getCloudFrontDomain", GetCloudFrontDomain)
 	}
 
-	rocketmqAPI := router.Group("/api/rocketmq")
-	{
-		rocketmqAPI.POST("/createTopic", createTopic)
-	}
+	//rocketmqAPI := router.Group("/api/rocketmq")
+	//{
+	//	rocketmqAPI.POST("/createTopic", createTopic)
+	//}
 
 	publicPropertyAPI := router.Group("/api/publicProperty")
 	{
@@ -58,8 +59,15 @@ func SetupRoutes(router *gin.Engine) {
 		publicPropertyAPI.POST("/edit", editPublicProperty)
 	}
 
-	etcdAPI := router.Group("/api/etcd")
+	//etcdAPI := router.Group("/api/etcd")
+	//{
+	//	etcdAPI.PUT("/create", createETCD)
+	//}
+
+	merchantManagementAPI := router.Group("/api/merchant")
 	{
-		etcdAPI.PUT("/create", createETCD)
+		merchantManagementAPI.GET("/get", getAllMerchant)
+		merchantManagementAPI.POST("/create", createMerchant)
+		merchantManagementAPI.GET("/createProgress", merchantGetProgress)
 	}
 }

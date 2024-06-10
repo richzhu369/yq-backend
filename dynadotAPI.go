@@ -37,7 +37,8 @@ func dynadotDomainList(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 20000,
 			"data": gin.H{
-				"res": "success",
+				"res":     "success",
+				"domains": res.String(),
 			},
 		})
 	} else {
@@ -51,19 +52,13 @@ func dynadotDomainList(c *gin.Context) {
 
 }
 
-func dynadotSearchDomain(c *gin.Context) {
+func dynadotSearchDomain(merchantName, merchantCode string) bool {
 
-	merchantCode := c.PostForm("MerchantCode")
-	siteName := c.PostForm("SiteName")
-
-	fmt.Println(merchantCode)
-	fmt.Println(siteName)
-
-	domain := randomString(6) + siteName + randomString(2) + ".xyz"
+	domain := randomString(6) + merchantName + randomString(2) + ".xyz"
 	fmt.Println(domain)
 
 	url := "https://api.dynadot.com/api3.json?key=pE8G6Q608b8a6l8x7C6u7oR6fU6V7t8t6Y746g656S7i&command=search&domain0=" + domain + "&show_price=1&currency=USD"
-	println(url)
+	log.Println(url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -73,49 +68,36 @@ func dynadotSearchDomain(c *gin.Context) {
 
 	body, _ := io.ReadAll(resp.Body)
 
-	fmt.Println(string(body))
+	log.Println(string(body))
 
 	res := gjson.Get(string(body), "SearchResponse.SearchResults.0.Available")
-	fmt.Println(res)
+	log.Println(res)
 	if res.String() == "yes" {
-		domainUID := randomString(24)
-		insertSiteInfo(SiteInfo{
+		insertMerchantInfo(MerchantInfo{
 			Domain:       domain,
 			MerchantCode: merchantCode,
-			SiteName:     siteName,
-			CwDomain:     siteName + "cw." + domain,
-			AwsCdnDomain: siteName + "ht." + domain,
-			CfDomain:     siteName + "ht1" + domain,
-			MqTopic:      siteName,
-			UID:          domainUID,
+			MerchantName: merchantName,
+			CwDomain:     merchantName + "cw." + domain,
+			AwsCdnDomain: merchantName + "ht." + domain,
+			CfDomain:     merchantName + "ht1" + domain,
+			MqTopic:      merchantName,
 			Process:      "搜索是否可被注册",
 			Status:       "searching",
 		})
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"message":   "域名可被注册",
-				"res":       "success",
-				"domainUID": domainUID,
-			},
-		})
+		upgradeProgress(1, merchantName, "el-icon-success", "primary")
+		upgradeProgress(2, merchantName, "el-icon-loading", "primary")
+		return true
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"code": 40001,
-			"data": gin.H{
-				"res":     "failed",
-				"message": "域名不可被注册",
-			},
-		})
-	}
+		upgradeProgress(1, merchantName, "el-icon-error", "danger")
+		return false
 
+	}
 }
 
-func dynadotBuyDomain(c *gin.Context) {
-	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+func dynadotBuyDomain(merchantName string) bool {
+	merchant := getMerchantByName(merchantName)
 
-	url := "https://api.dynadot.com/api3.json?key=pE8G6Q608b8a6l8x7C6u7oR6fU6V7t8t6Y746g656S7i&command=register&domain=" + site.Domain + "&duration=1&currency=USD"
+	url := "https://api.dynadot.com/api3.json?key=pE8G6Q608b8a6l8x7C6u7oR6fU6V7t8t6Y746g656S7i&command=register&domain=" + merchant.Domain + "&duration=1&currency=USD"
 	fmt.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -131,39 +113,25 @@ func dynadotBuyDomain(c *gin.Context) {
 	log.Println(res)
 
 	if res.String() == "success" {
-		site.UID = domainUID
-		site.Process = "购买完成"
-		site.Status = "purchased"
-		updateSiteInfo(site)
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"message":   "域名购买成功",
-				"res":       "success",
-				"domainUDI": site.UID,
-			},
-		})
+		merchant.Process = "购买完成"
+		merchant.Status = "purchased"
+		updateMerchantInfo(merchant)
+		upgradeProgress(2, merchantName, "el-icon-success", "primary")
+		upgradeProgress(3, merchantName, "el-icon-loading", "primary")
+		return true
 	} else {
-		updateSiteInfo(SiteInfo{
-			UID:     domainUID,
+		updateMerchantInfo(MerchantInfo{
 			Process: "购买失败",
 			Status:  "purchaseFailed",
 		})
-		c.JSON(http.StatusOK, gin.H{
-			"code": 40001,
-			"data": gin.H{
-				"message": "域名购买失败",
-				"res":     "failed",
-				"reason":  res.String(),
-			},
-		})
+		upgradeProgress(2, merchantName, "el-icon-danger", "primary")
+		return false
 	}
 }
 
-func dynadotChangeNS(c *gin.Context) {
-	domainUID := c.PostForm("domainUID")
-	fmt.Println(domainUID)
-	site := getSiteInfoByUID(domainUID)
+func dynadotChangeNS(merchantName string) bool {
+
+	site := getMerchantByName(merchantName)
 
 	url := "https://api.dynadot.com/api3.json?key=pE8G6Q608b8a6l8x7C6u7oR6fU6V7t8t6Y746g656S7i&command=set_ns&domain=" + site.Domain + "&ns0=" + site.CloudflareNS0 + "&ns1=" + site.CloudflareNS1
 
@@ -182,28 +150,15 @@ func dynadotChangeNS(c *gin.Context) {
 	if res == "success" {
 		site.Process = "NS服务器更改完成"
 		site.Status = "nsChanged"
-		updateSiteInfo(site)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"message":   "NS服务器更改成功",
-				"res":       "success",
-				"domainUDI": site.UID,
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(4, merchantName, "el-icon-success", "primary")
+		upgradeProgress(5, merchantName, "el-icon-loading", "primary")
+		return true
 	} else {
 		site.Process = "NS服务器更改失败"
 		site.Status = "nsChangeFailed"
-		updateSiteInfo(site)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 40001,
-			"data": gin.H{
-				"message": "NS服务器更改失败",
-				"res":     "failed",
-				"reason":  res,
-			},
-		})
+		updateMerchantInfo(site)
+		upgradeProgress(4, merchantName, "el-icon-danger", "primary")
+		return false
 	}
 }

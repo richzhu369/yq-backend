@@ -29,7 +29,7 @@ func init() {
 	}
 
 	// 自动迁移模式
-	ERR = DB.AutoMigrate(&User{}, &WhiteList{}, &WhitelistLog{}, &SiteInfo{}, &PublicProperty{})
+	ERR = DB.AutoMigrate(&User{}, &WhiteList{}, &WhitelistLog{}, &MerchantInfo{}, &PublicProperty{}, &CreateProgress{})
 	if ERR != nil {
 		log.Fatal("failed to migrate database: ", ERR)
 	}

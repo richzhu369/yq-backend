@@ -12,16 +12,15 @@ import (
 	"net/http"
 )
 
-func createCloudFront(c *gin.Context) {
-	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+func createCloudFront(merchantName string) bool {
+	site := getMerchantByName(merchantName)
 
 	// 加载 AWS 配置
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("sa-east-1"),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(publicProperty.AwsAK, publicProperty.AwsSK, "")),
 	)
 	if err != nil {
-		log.Fatalf("Unable to load SDK config, %v", err)
+		log.Fatalf("Unable to load SDK config, %v\n", err)
 	}
 
 	// 创建 CloudFront 客户端
@@ -88,30 +87,23 @@ func createCloudFront(c *gin.Context) {
 	result, err := client.CreateDistribution(context.TODO(), input)
 	if err != nil {
 		log.Printf("Failed to create distribution, %v", err)
-		c.JSON(http.StatusOK, gin.H{
-			"code":    20000,
-			"message": "创建cloudfront失败",
-			"res":     "failed",
-		})
-		return
+		upgradeProgress(11, merchantName, "el-icon-success", "primary")
+		upgradeProgress(12, merchantName, "el-icon-loading", "primary")
+		return false
 	}
 
 	log.Printf("CloudFront Distribution Created: %s\n", aws.ToString(result.Distribution.Id))
 	site.Process = "创建cloudfront 成功"
 	site.Status = "create cloudfront success"
 	site.CloudFrontID = *result.Distribution.Id
-	updateSiteInfo(site)
-
-	c.JSON(http.StatusOK, gin.H{
-		"code":    20000,
-		"message": "创建cloudfront成功",
-		"res":     "success",
-	})
+	updateMerchantInfo(site)
+	upgradeProgress(11, merchantName, "el-icon-danger", "primary")
+	return false
 }
 
 func GetCloudFrontDomain(c *gin.Context) {
 	domainUID := c.PostForm("domainUID")
-	site := getSiteInfoByUID(domainUID)
+	site := getMerchantByName(domainUID)
 
 	// 加载 AWS 配置
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("sa-east-1"),
@@ -148,7 +140,7 @@ func GetCloudFrontDomain(c *gin.Context) {
 	site.CloudfrontRecord = *resp.Distribution.DomainName
 	site.Process = "获取cloudfront 域名成功"
 	site.Status = "get cloudfront domain success"
-	updateSiteInfo(site)
+	updateMerchantInfo(site)
 	c.JSON(http.StatusOK, gin.H{
 		"code":    20000,
 		"message": "获取cloudfront域名成功",
