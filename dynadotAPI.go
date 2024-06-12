@@ -84,11 +84,11 @@ func dynadotSearchDomain(merchantName, merchantCode string) bool {
 			Process:      "搜索是否可被注册",
 			Status:       "process",
 		})
-		upgradeProgress(1, merchantName, "el-icon-success", "primary")
+		upgradeProgress(1, merchantName, "el-icon-check", "primary")
 		upgradeProgress(2, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
-		upgradeProgress(1, merchantName, "el-icon-error", "danger")
+		upgradeProgress(1, merchantName, "el-icon-close", "danger")
 		return false
 
 	}
@@ -115,7 +115,7 @@ func dynadotBuyDomain(merchantName string) bool {
 	if res.String() == "success" {
 		merchant.Process = "购买完成"
 		updateMerchantInfo(merchant)
-		upgradeProgress(2, merchantName, "el-icon-success", "primary")
+		upgradeProgress(2, merchantName, "el-icon-check", "primary")
 		upgradeProgress(3, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
@@ -123,7 +123,7 @@ func dynadotBuyDomain(merchantName string) bool {
 			Process: "购买失败",
 			Status: "failed",
 		})
-		upgradeProgress(2, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(2, merchantName, "el-icon-close", "primary")
 		return false
 	}
 }
@@ -149,14 +149,14 @@ func dynadotChangeNS(merchantName string) bool {
 	if res == "success" {
 		site.Process = "NS服务器更改完成"
 		updateMerchantInfo(site)
-		upgradeProgress(4, merchantName, "el-icon-success", "primary")
+		upgradeProgress(4, merchantName, "el-icon-check", "primary")
 		upgradeProgress(5, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		site.Process = "NS服务器更改失败"
 		site.Status = "failed"
 		updateMerchantInfo(site)
-		upgradeProgress(4, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(4, merchantName, "el-icon-close", "primary")
 		return false
 	}
 }

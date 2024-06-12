@@ -36,11 +36,11 @@ func cloudflareCreateZone(merchantName string) bool {
 		site.CloudflareDomainID = gjson.Get(string(body), "result.id").String()
 		site.Process = "添加域名到cloudflare"
 		updateMerchantInfo(site)
-		upgradeProgress(3, merchantName, "el-icon-success", "primary")
+		upgradeProgress(3, merchantName, "el-icon-check", "primary")
 		upgradeProgress(4, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
-		upgradeProgress(3, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(3, merchantName, "el-icon-close", "primary")
 		site.Status = "failed"
 		updateMerchantInfo(site)
 		return false
@@ -69,11 +69,11 @@ func cloudflareCheckZone(merchantName string) bool {
 		// 更新域名信息
 		site.Process = "检车站点是否pending"
 		updateMerchantInfo(site)
-		upgradeProgress(5, merchantName, "el-icon-success", "primary")
+		upgradeProgress(5, merchantName, "el-icon-check", "primary")
 		upgradeProgress(6, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
-		upgradeProgress(5, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(5, merchantName, "el-icon-close", "primary")
 		site.Status = "failed"
 		updateMerchantInfo(site)
 		return false
@@ -121,18 +121,19 @@ func cloudflareCreateRootRecord(merchantName string) bool {
 	if getRes.String() == "true" {
 		site.Process = "新建CNAME记录"
 		updateMerchantInfo(site)
-		upgradeProgress(6, merchantName, "el-icon-success", "primary")
+		upgradeProgress(6, merchantName, "el-icon-check", "primary")
 		upgradeProgress(7, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		site.Process = "新建CNAME记录失败"
 		site.Status = "failed"
 		updateMerchantInfo(site)
-		upgradeProgress(6, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(6, merchantName, "el-icon-close", "primary")
 		return false
 	}
 }
 
+// todo: 这里不好使,cf中 没有创建 验证ssl的记录
 func cloudflareCreateSSLRecord(merchantName string) bool {
 	site := getMerchantByName(merchantName)
 
@@ -155,14 +156,14 @@ func cloudflareCreateSSLRecord(merchantName string) bool {
 	if getRes.String() == "true" {
 		site.Process = "新建SSL CNAME记录"
 		updateMerchantInfo(site)
-		upgradeProgress(9, merchantName, "el-icon-success", "primary")
+		upgradeProgress(9, merchantName, "el-icon-check", "primary")
 		upgradeProgress(10, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		site.Process = "新建CNAME记录失败"
 		site.Status = "failed"
 		updateMerchantInfo(site)
-		upgradeProgress(9, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(9, merchantName, "el-icon-close", "primary")
 		return false
 	}
 }
@@ -190,14 +191,14 @@ func cloudflareCreateCloudfrontRecord(merchantName string) bool {
 	if getRes.String() == "true" {
 		site.Process = "新建CloudFront CNAME记录"
 		updateMerchantInfo(site)
-		upgradeProgress(12, merchantName, "el-icon-success", "primary")
-		upgradeProgress(13, merchantName, "el-icon-success", "primary")
+		upgradeProgress(12, merchantName, "el-icon-check", "primary")
+		upgradeProgress(13, merchantName, "el-icon-check", "primary")
 		return true
 	} else {
 		site.Process = "新建CloudFront CNAME记录失败"
 		site.Status = "failed"
 		updateMerchantInfo(site)
-		upgradeProgress(12, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(12, merchantName, "el-icon-close", "primary")
 		return false
 	}
 }

@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type CreateProgress struct {
 	ID           uint      `gorm:"primaryKey"`
@@ -65,9 +68,24 @@ func insertToProgress(merchantName, cpIcon, cpContent, cpSize, cpType string, St
 	DB.Create(&createProgress)
 }
 
+// todo: 执行后 数据库数据不变
 func upgradeProgress(stepNum int ,merchantName, cpIcon, cpType string) {
 	var createProgress CreateProgress
 	createProgress.Icon = cpIcon
 	createProgress.Type = cpType
+
+	// 状态颜色
+	if strings.HasSuffix(createProgress.Icon, "danger") {
+		createProgress.Color = "red"
+	} else if strings.HasSuffix(createProgress.Icon, "close") {
+		createProgress.Color = "#8ED058"
+	} else if strings.HasSuffix(createProgress.Icon, "loading") {
+		createProgress.Color = "#97ABEB"
+	} else {
+		createProgress.Color = ""
+	}
+
+
+	// 打印出来 where 的值，来修复这个问题
 	DB.Updates(&createProgress).Where("merchant_name = ? AND step = ?", merchantName, stepNum)
 }

@@ -51,7 +51,7 @@ func createETCD(merchantName string) bool {
 		site.Status = "failed"
 		site.Process = "创建 ETCD 键值对失败：" + key
 		updateMerchantInfo(site)
-		upgradeProgress(14, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(14, merchantName, "el-icon-close", "primary")
 		return false
 	}
 
@@ -61,7 +61,7 @@ func createETCD(merchantName string) bool {
 	//DB.Model(&PublicProperty{}).Update("RedisDBNumber", publicProperty.RedisDBNumber)
 
 	log.Printf("键 %s 创建成功\n", key)
-	upgradeProgress(14, merchantName, "el-icon-success", "primary")
+	upgradeProgress(14, merchantName, "el-icon-check", "primary")
 	site.Status = "done"
 	site.Process = "创建 ETCD 键值对成功：" + key
 	updateMerchantInfo(site)

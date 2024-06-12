@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
+	"time"
 )
 
 func getAllMerchant(c *gin.Context) {
@@ -59,9 +61,9 @@ func createMerchant(c *gin.Context) {
 		createMerchantFailed(c)
 	}
 	// 5. 验证cloudflare NS
-	res = cloudflareCheckZone(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	for !cloudflareCheckZone(merchantName) {
+		log.Println("cloudflare NS验证未通过，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 	// 6. 创建cname * ，到cf的lb
 	res = cloudflareCreateRootRecord(merchantName)
@@ -70,7 +72,7 @@ func createMerchant(c *gin.Context) {
 	}
 	// 7. aws中创建SSL
 	res = createSSL(merchantName)
-	if !res{
+	if !res {
 		createMerchantFailed(c)
 	}
 	// 8. 获得SSL验证信息
@@ -80,33 +82,34 @@ func createMerchant(c *gin.Context) {
 	}
 	// 9. 在cloudflare中创建 aws ssl需要的 cname
 	res = cloudflareCreateSSLRecord(merchantName)
-	if !res{
+	if !res {
 		createMerchantFailed(c)
 	}
 	// 10. 在aws中检测ssl的状态，是否通过验证
-	res = GetSSLStatus(merchantName)
-	if !res{
-		createMerchantFailed(c)
+	for !GetSSLStatus(merchantName) {
+		log.Println("aws SSL状态检查未通过，正在重试...")
+		time.Sleep(5 * time.Second) // 等待30秒后重试
 	}
+
 	// 11. 在aws中创建 cloudfront
 	res = createCloudFront(merchantName)
-	if !res{
+	if !res {
 		createMerchantFailed(c)
 	}
 	// 12. 在cloudflare中创建 cloudfront的cname ht
 	res = cloudflareCreateCloudfrontRecord(merchantName)
-	if !res{
+	if !res {
 		createMerchantFailed(c)
 	}
 
 	// 13. 创建RocketMQ Topic
 	res = createTopic(merchantName)
-	if !res{
+	if !res {
 		createMerchantFailed(c)
 	}
 	// 14. 创建ETCD配置
 	res = createETCD(merchantName)
-	if !res{
+	if !res {
 		createMerchantFailed(c)
 	}
 
@@ -118,11 +121,9 @@ func createMerchant(c *gin.Context) {
 }
 
 func createMerchantFailed(c *gin.Context) {
-	//todo: 更新数据库的创建状态为失败
-
-	c.JSON(http.StatusOK,gin.H{
-		"code":40001,
-		"message":"创建商户失败",
+	c.JSON(http.StatusOK, gin.H{
+		"code":    40001,
+		"message": "创建商户失败",
 	})
 }
 

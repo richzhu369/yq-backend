@@ -55,14 +55,14 @@ func createTopic(merchantName string) bool {
 	if verifyRes {
 		site.Process = "创建Topic成功"
 		updateMerchantInfo(site)
-		upgradeProgress(13, merchantName, "el-icon-success", "primary")
+		upgradeProgress(13, merchantName, "el-icon-check", "primary")
 		upgradeProgress(14, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		site.Process = "创建Topic失败"
 		site.Status = "failed"
 		updateMerchantInfo(site)
-		upgradeProgress(13, merchantName, "el-icon-danger", "primary")
+		upgradeProgress(13, merchantName, "el-icon-close", "primary")
 		return false
 	}
 }

@@ -87,7 +87,7 @@ func createCloudFront(merchantName string) bool {
 	result, err := client.CreateDistribution(context.TODO(), input)
 	if err != nil {
 		log.Printf("Failed to create distribution, %v", err)
-		upgradeProgress(11, merchantName, "el-icon-success", "primary")
+		upgradeProgress(11, merchantName, "el-icon-check", "primary")
 		upgradeProgress(12, merchantName, "el-icon-loading", "primary")
 		site.Status = "failed"
 		site.Process = "创建cloudfront 失败"
@@ -99,7 +99,7 @@ func createCloudFront(merchantName string) bool {
 	site.Process = "创建cloudfront 成功"
 	site.CloudFrontID = *result.Distribution.Id
 	updateMerchantInfo(site)
-	upgradeProgress(11, merchantName, "el-icon-danger", "primary")
+	upgradeProgress(11, merchantName, "el-icon-close", "primary")
 	return true
 }
 
