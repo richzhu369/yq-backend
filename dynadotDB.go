@@ -6,7 +6,7 @@ import (
 
 type MerchantInfo struct {
 	gorm.Model
-	Status             string `json:"status"`
+	Status             string `json:"Status"`
 	Domain             string `json:"Domain"`
 	CwDomain           string `json:"CwDomain"`
 	AwsCdnDomain       string `json:"AwsCdnDomain"`

@@ -82,7 +82,7 @@ func dynadotSearchDomain(merchantName, merchantCode string) bool {
 			CfDomain:     merchantName + "ht1" + domain,
 			MqTopic:      merchantName,
 			Process:      "搜索是否可被注册",
-			Status:       "searching",
+			Status:       "process",
 		})
 		upgradeProgress(1, merchantName, "el-icon-success", "primary")
 		upgradeProgress(2, merchantName, "el-icon-loading", "primary")
@@ -114,7 +114,6 @@ func dynadotBuyDomain(merchantName string) bool {
 
 	if res.String() == "success" {
 		merchant.Process = "购买完成"
-		merchant.Status = "purchased"
 		updateMerchantInfo(merchant)
 		upgradeProgress(2, merchantName, "el-icon-success", "primary")
 		upgradeProgress(3, merchantName, "el-icon-loading", "primary")
@@ -122,7 +121,7 @@ func dynadotBuyDomain(merchantName string) bool {
 	} else {
 		updateMerchantInfo(MerchantInfo{
 			Process: "购买失败",
-			Status:  "purchaseFailed",
+			Status: "failed",
 		})
 		upgradeProgress(2, merchantName, "el-icon-danger", "primary")
 		return false
@@ -149,14 +148,13 @@ func dynadotChangeNS(merchantName string) bool {
 	res := gjson.Get(string(body), "SetNsResponse.Status").String()
 	if res == "success" {
 		site.Process = "NS服务器更改完成"
-		site.Status = "nsChanged"
 		updateMerchantInfo(site)
 		upgradeProgress(4, merchantName, "el-icon-success", "primary")
 		upgradeProgress(5, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		site.Process = "NS服务器更改失败"
-		site.Status = "nsChangeFailed"
+		site.Status = "failed"
 		updateMerchantInfo(site)
 		upgradeProgress(4, merchantName, "el-icon-danger", "primary")
 		return false

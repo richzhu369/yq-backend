@@ -35,13 +35,14 @@ func cloudflareCreateZone(merchantName string) bool {
 		site.CloudflareNS1 = gjson.Get(string(body), "result.name_servers.1").String()
 		site.CloudflareDomainID = gjson.Get(string(body), "result.id").String()
 		site.Process = "添加域名到cloudflare"
-		site.Status = "addDomainToCloudflare"
 		updateMerchantInfo(site)
 		upgradeProgress(3, merchantName, "el-icon-success", "primary")
 		upgradeProgress(4, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		upgradeProgress(3, merchantName, "el-icon-danger", "primary")
+		site.Status = "failed"
+		updateMerchantInfo(site)
 		return false
 	}
 }
@@ -67,13 +68,14 @@ func cloudflareCheckZone(merchantName string) bool {
 	if getRes.String() == "active" {
 		// 更新域名信息
 		site.Process = "检车站点是否pending"
-		site.Status = "checkSiteStatus"
 		updateMerchantInfo(site)
 		upgradeProgress(5, merchantName, "el-icon-success", "primary")
 		upgradeProgress(6, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		upgradeProgress(5, merchantName, "el-icon-danger", "primary")
+		site.Status = "failed"
+		updateMerchantInfo(site)
 		return false
 	}
 }
@@ -118,14 +120,13 @@ func cloudflareCreateRootRecord(merchantName string) bool {
 	getRes := gjson.Get(string(body), "success")
 	if getRes.String() == "true" {
 		site.Process = "新建CNAME记录"
-		site.Status = "createCNAMEtoCloudflare"
 		updateMerchantInfo(site)
 		upgradeProgress(6, merchantName, "el-icon-success", "primary")
 		upgradeProgress(7, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		site.Process = "新建CNAME记录失败"
-		site.Status = "failedCreateCNAMEtoCloudflare"
+		site.Status = "failed"
 		updateMerchantInfo(site)
 		upgradeProgress(6, merchantName, "el-icon-danger", "primary")
 		return false
@@ -153,14 +154,13 @@ func cloudflareCreateSSLRecord(merchantName string) bool {
 	getRes := gjson.Get(string(body), "success")
 	if getRes.String() == "true" {
 		site.Process = "新建SSL CNAME记录"
-		site.Status = "create SSL CNAME to Cloudflare"
 		updateMerchantInfo(site)
 		upgradeProgress(9, merchantName, "el-icon-success", "primary")
 		upgradeProgress(10, merchantName, "el-icon-loading", "primary")
 		return true
 	} else {
 		site.Process = "新建CNAME记录失败"
-		site.Status = "failedCreateCNAMEtoCloudflare"
+		site.Status = "failed"
 		updateMerchantInfo(site)
 		upgradeProgress(9, merchantName, "el-icon-danger", "primary")
 		return false
@@ -189,14 +189,13 @@ func cloudflareCreateCloudfrontRecord(merchantName string) bool {
 	getRes := gjson.Get(string(body), "success")
 	if getRes.String() == "true" {
 		site.Process = "新建CloudFront CNAME记录"
-		site.Status = "create CloudFront CNAME to Cloudflare"
 		updateMerchantInfo(site)
 		upgradeProgress(12, merchantName, "el-icon-success", "primary")
 		upgradeProgress(13, merchantName, "el-icon-success", "primary")
 		return true
 	} else {
 		site.Process = "新建CloudFront CNAME记录失败"
-		site.Status = "failedCreateCloudFront CNAMEtoCloudflare"
+		site.Status = "failed"
 		updateMerchantInfo(site)
 		upgradeProgress(12, merchantName, "el-icon-danger", "primary")
 		return false

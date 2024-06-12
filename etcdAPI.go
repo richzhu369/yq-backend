@@ -48,6 +48,9 @@ func createETCD(merchantName string) bool {
 	cancel()
 	if err != nil {
 		log.Println("设置 ETCD 键值对失败：" + key)
+		site.Status = "failed"
+		site.Process = "创建 ETCD 键值对失败：" + key
+		updateMerchantInfo(site)
 		upgradeProgress(14, merchantName, "el-icon-danger", "primary")
 		return false
 	}
@@ -57,7 +60,10 @@ func createETCD(merchantName string) bool {
 	DB.Model(&PublicProperty{}).Where("id = 1").Update("redis_db_number", publicProperty.RedisDBNumber)
 	//DB.Model(&PublicProperty{}).Update("RedisDBNumber", publicProperty.RedisDBNumber)
 
-	log.Printf("键 %s 创建成功", key)
+	log.Printf("键 %s 创建成功\n", key)
 	upgradeProgress(14, merchantName, "el-icon-success", "primary")
+	site.Status = "done"
+	site.Process = "创建 ETCD 键值对成功：" + key
+	updateMerchantInfo(site)
 	return true
 }

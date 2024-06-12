@@ -89,16 +89,18 @@ func createCloudFront(merchantName string) bool {
 		log.Printf("Failed to create distribution, %v", err)
 		upgradeProgress(11, merchantName, "el-icon-success", "primary")
 		upgradeProgress(12, merchantName, "el-icon-loading", "primary")
+		site.Status = "failed"
+		site.Process = "创建cloudfront 失败"
+		updateMerchantInfo(site)
 		return false
 	}
 
 	log.Printf("CloudFront Distribution Created: %s\n", aws.ToString(result.Distribution.Id))
 	site.Process = "创建cloudfront 成功"
-	site.Status = "create cloudfront success"
 	site.CloudFrontID = *result.Distribution.Id
 	updateMerchantInfo(site)
 	upgradeProgress(11, merchantName, "el-icon-danger", "primary")
-	return false
+	return true
 }
 
 func GetCloudFrontDomain(c *gin.Context) {
@@ -139,7 +141,6 @@ func GetCloudFrontDomain(c *gin.Context) {
 	log.Printf("CloudFront Distribution Domain Name: %s\n", *resp.Distribution.DomainName)
 	site.CloudfrontRecord = *resp.Distribution.DomainName
 	site.Process = "获取cloudfront 域名成功"
-	site.Status = "get cloudfront domain success"
 	updateMerchantInfo(site)
 	c.JSON(http.StatusOK, gin.H{
 		"code":    20000,
