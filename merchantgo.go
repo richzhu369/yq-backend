@@ -46,6 +46,8 @@ func createMerchant(c *gin.Context) {
 	go createPipeline(merchantName, merchantCode, merchant)
 }
 
+// todo 下面的调用方法，应该都改成for，方便失败自动修复
+// createPipeline 开始创建商户
 func createPipeline(merchantName, merchantCode string, merchant MerchantInfo) {
 	// 创建前端timeline步骤
 	createProgress(merchantName)
