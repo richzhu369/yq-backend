@@ -17,7 +17,7 @@ func ingressWhitelist(c *gin.Context) {
 	ips := c.PostForm("ips")
 	act := c.PostForm("act")
 	username, _ := c.Cookie("Username")
-
+	isProcessing = true
 	fmt.Println(ips)
 	fmt.Println(act)
 	fmt.Println(username)
@@ -28,13 +28,13 @@ func ingressWhitelist(c *gin.Context) {
 			"code":    40003,
 			"message": "IP地址不正确.",
 		})
-
 		return
 	}
 
 	// 这里判断加白操作 是否执行成功
 	ChangeWhitelist(resIps)
 
+	isProcessing = false
 	c.JSON(http.StatusOK, gin.H{
 		"code":    20000,
 		"message": "操作完成.",
@@ -227,12 +227,14 @@ func fetchWhitelistLogs(c *gin.Context) {
 	})
 }
 
-func getIngressStatus(c *gin.Context) {
+var isProcessing = false
 
+func checkIsProcessing(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code": 20000,
 		"data": gin.H{
-			"res": "done",
+			"res": isProcessing,
 		},
 	})
+
 }

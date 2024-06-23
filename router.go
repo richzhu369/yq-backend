@@ -19,7 +19,7 @@ func SetupRoutes(router *gin.Engine) {
 		k8sIngress.POST("/whitelist", ingressWhitelist)
 		k8sIngress.GET("/fetchWhitelist", fetchAllWhitelist)
 		k8sIngress.GET("/fetchWhitelistLogs", fetchWhitelistLogs)
-		k8sIngress.GET("/getStatus", getIngressStatus)
+		k8sIngress.GET("/getStatus", checkIsProcessing)
 	}
 
 	dynadotApi := router.Group("/api/dynadot")
