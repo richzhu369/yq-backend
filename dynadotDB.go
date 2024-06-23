@@ -2,6 +2,7 @@ package main
 
 import (
 	"gorm.io/gorm"
+	"log"
 )
 
 type MerchantInfo struct {
@@ -27,7 +28,11 @@ type MerchantInfo struct {
 
 func updateMerchantInfo(merchant MerchantInfo) {
 	// 根据传入的 merchant.UID 更新
-	DB.Model(&MerchantInfo{}).Where("merchant_name = ?", merchant.MerchantName).Updates(merchant)
+	tx := DB.Model(&MerchantInfo{}).Where("merchant_name = ?", merchant.MerchantName).Updates(merchant)
+
+	if tx.Error != nil{
+		log.Println("更新失败:", tx.Error)
+	}
 }
 
 func  insertMerchantInfo(merchant MerchantInfo) {

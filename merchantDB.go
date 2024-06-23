@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -13,11 +14,10 @@ type CreateProgress struct {
 	Size         string    `json:"Size"`
 	Type         string    `json:"Type"`
 	Icon         string    `json:"Icon"`
-	Color string `json:"Color"`
-	Step  int    `json:"Step"`
+	Color        string    `json:"Color"`
+	Step         int       `json:"Step"`
 }
 
-// todo: 整理所有流程
 func createProgress(merchantName string) {
 	// 域名是否可被注册
 	insertToProgress(merchantName, "el-icon-loading", "域名是否可被注册", "large", "primary", 1)
@@ -28,7 +28,7 @@ func createProgress(merchantName string) {
 	// 在dynadot更改NS
 	insertToProgress(merchantName, "el-icon-more", "更改NS服务器到cf", "large", "primary", 4)
 	// 验证cloudflare域名是否添加成功
-	insertToProgress(merchantName, "el-icon-more", "验证NS", "large", "primary", 5)
+	insertToProgress(merchantName, "el-icon-more", "验证NS更改结果", "large", "primary", 5)
 	// 解析CNAME * 到aws中的 lb上
 	insertToProgress(merchantName, "el-icon-more", "解析*到aws的lb", "large", "primary", 6)
 	// 创建aws ssl
@@ -36,11 +36,9 @@ func createProgress(merchantName string) {
 	// 获取aws ssl 的验证解析
 	insertToProgress(merchantName, "el-icon-more", "获取aws ssl 的验证解析", "large", "primary", 8)
 	// 在cloudflare中创建 aws ssl需要的 cname
-	insertToProgress(merchantName, "el-icon-more", "验证 ssl cname", "large", "primary", 9)
+	insertToProgress(merchantName, "el-icon-more", "创建 ssl cname", "large", "primary", 9)
 	// 在aws中查看 ssl的状态，是否通过验证
 	insertToProgress(merchantName, "el-icon-more", "验证 ssl cname", "large", "primary", 10)
-
-
 	// 创建cloudfront
 	insertToProgress(merchantName, "el-icon-more", "创建cloudfront", "large", "primary", 11)
 	// 解析ht到aws cloudfront
@@ -49,7 +47,6 @@ func createProgress(merchantName string) {
 	insertToProgress(merchantName, "el-icon-more", "创建RocketMQ Topic", "large", "primary", 13)
 	// 创建ETCD
 	insertToProgress(merchantName, "el-icon-more", "创建ETCD", "large", "primary", 14)
-
 
 	// todo: 增加ht1 域名解析 到流程中, 看到老站也没解析，应该是被 * 代替了
 
@@ -65,19 +62,20 @@ func insertToProgress(merchantName, cpIcon, cpContent, cpSize, cpType string, St
 	createProgress.Content = cpContent
 	createProgress.Size = cpSize
 	createProgress.Type = cpType
+	createProgress.Step = Step
 	DB.Create(&createProgress)
 }
 
-// todo: 执行后 数据库数据不变
-func upgradeProgress(stepNum int ,merchantName, cpIcon, cpType string) {
+func upgradeProgress(stepNum int, merchantName, cpIcon, cpType string) {
+	fmt.Println("upgradeProgress: ",stepNum, merchantName, cpIcon, cpType)
 	var createProgress CreateProgress
 	createProgress.Icon = cpIcon
 	createProgress.Type = cpType
 
 	// 状态颜色
-	if strings.HasSuffix(createProgress.Icon, "danger") {
+	if strings.HasSuffix(createProgress.Icon, "close") {
 		createProgress.Color = "red"
-	} else if strings.HasSuffix(createProgress.Icon, "close") {
+	} else if strings.HasSuffix(createProgress.Icon, "check") {
 		createProgress.Color = "#8ED058"
 	} else if strings.HasSuffix(createProgress.Icon, "loading") {
 		createProgress.Color = "#97ABEB"
@@ -85,7 +83,6 @@ func upgradeProgress(stepNum int ,merchantName, cpIcon, cpType string) {
 		createProgress.Color = ""
 	}
 
-
 	// 打印出来 where 的值，来修复这个问题
-	DB.Updates(&createProgress).Where("merchant_name = ? AND step = ?", merchantName, stepNum)
+	DB.Where("merchant_name = ? AND step = ?", merchantName, stepNum).Updates(&createProgress)
 }

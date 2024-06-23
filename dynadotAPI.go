@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
 const (
@@ -89,10 +90,22 @@ func dynadotSearchDomain(merchantName, merchantCode string) bool {
 		return true
 	} else {
 		upgradeProgress(1, merchantName, "el-icon-close", "danger")
+		insertMerchantInfo(MerchantInfo{
+			Domain:       domain,
+			MerchantCode: merchantCode,
+			MerchantName: merchantName,
+			CwDomain:     merchantName + "cw." + domain,
+			AwsCdnDomain: merchantName + "ht." + domain,
+			CfDomain:     merchantName + "ht1" + domain,
+			MqTopic:      merchantName,
+			Process:      "搜索是否可被注册",
+			Status:       "failed",
+		})
 		return false
 
 	}
 }
+
 
 func dynadotBuyDomain(merchantName string) bool {
 	merchant := getMerchantByName(merchantName)
@@ -121,7 +134,7 @@ func dynadotBuyDomain(merchantName string) bool {
 	} else {
 		updateMerchantInfo(MerchantInfo{
 			Process: "购买失败",
-			Status: "failed",
+			Status:  "failed",
 		})
 		upgradeProgress(2, merchantName, "el-icon-close", "primary")
 		return false
@@ -129,12 +142,14 @@ func dynadotBuyDomain(merchantName string) bool {
 }
 
 func dynadotChangeNS(merchantName string) bool {
+	// 需要sleep一下， dynadot购买域名后，立刻操作，会偶发失败，域名不存在
+	time.Sleep(5 * time.Second)
 
 	site := getMerchantByName(merchantName)
 
 	url := "https://api.dynadot.com/api3.json?key=pE8G6Q608b8a6l8x7C6u7oR6fU6V7t8t6Y746g656S7i&command=set_ns&domain=" + site.Domain + "&ns0=" + site.CloudflareNS0 + "&ns1=" + site.CloudflareNS1
 
-	fmt.Println(url)
+	log.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Printf("The HTTP request failed with error %s\n", err)
@@ -151,12 +166,14 @@ func dynadotChangeNS(merchantName string) bool {
 		updateMerchantInfo(site)
 		upgradeProgress(4, merchantName, "el-icon-check", "primary")
 		upgradeProgress(5, merchantName, "el-icon-loading", "primary")
+		log.Println("NS服务器更改完成")
 		return true
 	} else {
 		site.Process = "NS服务器更改失败"
 		site.Status = "failed"
 		updateMerchantInfo(site)
 		upgradeProgress(4, merchantName, "el-icon-close", "primary")
+		log.Println("NS服务器更改失败")
 		return false
 	}
 }

@@ -38,6 +38,7 @@ func createTopic(merchantName string) bool {
 		)
 		if err != nil {
 			fmt.Println(err.Error())
+			return false
 		}
 	}
 

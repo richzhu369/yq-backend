@@ -37,6 +37,7 @@ func SetupRoutes(router *gin.Engine) {
 	//	cloudflareAPI.PUT("/createRootRecord", cloudflareCreateRootRecord)
 	//	cloudflareAPI.PUT("/createSSLRecord", cloudflareCreateSSLRecord)
 	//	cloudflareAPI.PUT("/cloudflareCreateCloudfrontRecord", cloudflareCreateCloudfrontRecord)
+	//	cloudflareAPI.POST("/cloudflareCreateCloudfrontRecord", cloudflareCreateSSLRecordTest)
 	//}
 
 	awsAPI := router.Group("/api/aws")
@@ -46,6 +47,7 @@ func SetupRoutes(router *gin.Engine) {
 		//awsAPI.GET("/getSSLVerifyInfo", GetSSLVerifyInfo)
 		//awsAPI.GET("/getSSLStatus", GetSSLStatus)
 		awsAPI.GET("/getCloudFrontDomain", GetCloudFrontDomain)
+
 	}
 
 	//rocketmqAPI := router.Group("/api/rocketmq")
@@ -69,5 +71,7 @@ func SetupRoutes(router *gin.Engine) {
 		merchantManagementAPI.GET("/get", getAllMerchant)
 		merchantManagementAPI.POST("/create", createMerchant)
 		merchantManagementAPI.GET("/createProgress", merchantGetProgress)
+		//merchantManagementAPI.POST("/testTopic",createTopicTest)
+		//merchantManagementAPI.POST("/testGetSSL",GetSSLVerifyInfo)
 	}
 }

@@ -21,6 +21,7 @@ func createCloudFront(merchantName string) bool {
 	)
 	if err != nil {
 		log.Fatalf("Unable to load SDK config, %v\n", err)
+		return false
 	}
 
 	// 创建 CloudFront 客户端
@@ -29,7 +30,7 @@ func createCloudFront(merchantName string) bool {
 	// 创建 CloudFront 分发配置
 	input := &cloudfront.CreateDistributionInput{
 		DistributionConfig: &types.DistributionConfig{
-			CallerReference: aws.String("unique-caller-reference"),
+			CallerReference: aws.String(randomString(12)),
 			Aliases: &types.Aliases{
 				Quantity: aws.Int32(1),
 				Items:    []string{site.AwsCdnDomain},
@@ -83,10 +84,12 @@ func createCloudFront(merchantName string) bool {
 		},
 	}
 
+	log.Println("AwsSSLArn: ",site.AwsSSLArn)
+
 	// 创建 CloudFront 分发
 	result, err := client.CreateDistribution(context.TODO(), input)
 	if err != nil {
-		log.Printf("Failed to create distribution, %v", err)
+		log.Printf("Failed to create distribution, %v\n", err)
 		upgradeProgress(11, merchantName, "el-icon-check", "primary")
 		upgradeProgress(12, merchantName, "el-icon-loading", "primary")
 		site.Status = "failed"
@@ -98,8 +101,12 @@ func createCloudFront(merchantName string) bool {
 	log.Printf("CloudFront Distribution Created: %s\n", aws.ToString(result.Distribution.Id))
 	site.Process = "创建cloudfront 成功"
 	site.CloudFrontID = *result.Distribution.Id
+	site.CloudfrontRecord = *result.Distribution.DomainName
+	log.Println("CloudFront Distribution ID: ", site.CloudFrontID)
+	log.Println("CloudFront CloudfrontRecord: ", site.CloudfrontRecord)
 	updateMerchantInfo(site)
-	upgradeProgress(11, merchantName, "el-icon-close", "primary")
+	upgradeProgress(11, merchantName, "el-icon-check", "primary")
+	upgradeProgress(12, merchantName, "el-icon-loading", "primary")
 	return true
 }
 

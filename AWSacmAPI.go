@@ -20,7 +20,7 @@ func createSSL(merchantName string) bool {
 	)
 	if err != nil {
 		log.Printf("Unable to load SDK config, %v", err)
-		site.Status = "Failed"
+		site.Status = "failed"
 		updateMerchantInfo(site)
 		return false
 	}
@@ -38,7 +38,7 @@ func createSSL(merchantName string) bool {
 	result, err := client.RequestCertificate(context.TODO(), input)
 	if err != nil {
 		log.Printf("Failed to request certificate, %v", err)
-		site.Status = "Failed"
+		site.Status = "failed"
 		updateMerchantInfo(site)
 		return false
 	}
@@ -54,23 +54,28 @@ func createSSL(merchantName string) bool {
 }
 
 func GetSSLVerifyInfo(merchantName string) bool {
+	//merchantName := c.PostForm("merchantName")
+
 	site := getMerchantByName(merchantName)
 
+	log.Println("传入商户名：", merchantName)
+	log.Println("当前商户名：", site.MerchantName)
 	// 加载 AWS 配置
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("sa-east-1"),
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(publicProperty.AwsAK, publicProperty.AwsSK, "")),
 	)
 	if err != nil {
 		log.Printf("Unable to load SDK config, %v", err)
-		site.Status = "Failed"
+		site.Status = "failed"
 		updateMerchantInfo(site)
 		return false
 	}
 
 	// 创建 ACM 客户端
 	client := acm.NewFromConfig(cfg)
-
-	// 替换为您的证书 ARN
+	// 指定查询的arn
+	log.Println("site.AwsSSLArn")
+	log.Println(site.AwsSSLArn)
 	certificateArn := site.AwsSSLArn
 
 	// 调用 DescribeCertificate 获取证书详情
@@ -78,80 +83,73 @@ func GetSSLVerifyInfo(merchantName string) bool {
 		CertificateArn: aws.String(certificateArn),
 	}
 
+	log.Println("1")
 	certDetail, err := client.DescribeCertificate(context.TODO(), describeCertInput)
 	if err != nil {
 		log.Printf("Failed to describe certificate, %v\n", err)
-		site.Status = "Failed"
+		site.Status = "failed"
 		updateMerchantInfo(site)
 		upgradeProgress(8, merchantName, "el-icon-close", "primary")
 		return false
 	}
+	log.Println("2")
 
 	site.Process = "等待Cname验证"
 
-	// 输出 CNAME 验证信息
-	for _, option := range certDetail.Certificate.DomainValidationOptions {
-		log.Printf("DomainName: %sn", *option.DomainName)
-		if option.ResourceRecord != nil {
-			site.CnameKey = *option.ResourceRecord.Name
-			site.CnameValue = *option.ResourceRecord.Value
-			updateMerchantInfo(site)
+	if len(certDetail.Certificate.DomainValidationOptions) > 0 {
+
+		option:= certDetail.Certificate.DomainValidationOptions[0]
+		if option.ResourceRecord !=nil{
+			log.Println("3")
+			if option.ResourceRecord.Name !=nil{
+				log.Println(*certDetail.Certificate.DomainValidationOptions[0].ResourceRecord.Name)
+				site.CnameKey = *certDetail.Certificate.DomainValidationOptions[0].ResourceRecord.Name
+				log.Println("3.1")
+			}else {
+				return false
+			}
+			if option.ResourceRecord.Value !=nil{
+				log.Println(*certDetail.Certificate.DomainValidationOptions[0].ResourceRecord.Value)
+				site.CnameValue = *certDetail.Certificate.DomainValidationOptions[0].ResourceRecord.Value
+				log.Println("3.2")
+			}else {
+				return false
+			}
+		}else {
+			return false
 		}
 
+		log.Println("4")
+		updateMerchantInfo(site)
+		log.Println("5")
+
+		upgradeProgress(8, merchantName, "el-icon-check", "primary")
+		upgradeProgress(9, merchantName, "el-icon-loading", "primary")
+		log.Println("获取SSL证书验证的Cname和Value成功")
+	} else {
+		upgradeProgress(8, merchantName, "el-icon-close", "primary")
+		log.Println("获取SSL证书验证的Cname和Value失败")
 	}
 
-	upgradeProgress(8, merchantName, "el-icon-check", "primary")
-	upgradeProgress(9, merchantName, "el-icon-loading", "primary")
-	return true
-}
+	// 输出 CNAME 验证信息
+	//for _, option := range certDetail.Certificate.DomainValidationOptions {
+	//	log.Println("option的值：", *option.ResourceRecord.Name, *option.ResourceRecord.Value)
+	//	if option.ResourceRecord != nil {
+	//		log.Println("记录的商户cname为：", "CNAME:", *option.ResourceRecord.Name, "Value:", *option.ResourceRecord.Value, site.MerchantName)
+	//		site.CnameKey = *option.ResourceRecord.Name
+	//		site.CnameValue = *option.ResourceRecord.Value
+	//
+	//		updateMerchantInfo(site)
+	//		log.Println("更新商户的Cname和Value: ", site.MerchantName, site.CnameKey, site.CnameValue)
+	//	} else {
+	//		log.Println("option.ResourceRecord 验证记录为空")
+	//	}
+	//}
 
-//func GetSSLStatus(merchantName string) bool {
-//	site := getMerchantByName(merchantName)
-//
-//	// 加载 AWS 配置
-//	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"),
-//		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(publicProperty.AwsAK, publicProperty.AwsSK, "")),
-//	)
-//	if err != nil {
-//		log.Printf("Unable to load SDK config, %v", err)
-//	}
-//
-//	// 创建 ACM 客户端
-//	client := acm.NewFromConfig(cfg)
-//
-//	// 替换为您的证书 ARN
-//	certificateArn := site.AwsSSLArn
-//
-//	// 调用 DescribeCertificate 获取证书详情
-//	describeCertInput := &acm.DescribeCertificateInput{
-//		CertificateArn: aws.String(certificateArn),
-//	}
-//
-//	certDetail, err := client.DescribeCertificate(context.TODO(), describeCertInput)
-//	if err != nil {
-//		log.Printf("failed to describe certificate, %v", err)
-//	}
-//
-//	//fmt.Println(certDetail.Certificate.DomainValidationOptions[2])
-//	//fmt.Println(certDetail.Certificate.DomainValidationOptions[5])
-//	// 输出每个域名的 CNAME 验证状态
-//	for _, option := range certDetail.Certificate.DomainValidationOptions {
-//		if option.ValidationStatus == "SUCCESS" {
-//			log.Println("CNAME validation successful for domain:", *option.DomainName)
-//			site.Process = "SSL cname verify down"
-//			updateMerchantInfo(site)
-//
-//			upgradeProgress(10, merchantName, "el-icon-check", "primary")
-//			upgradeProgress(11, merchantName, "el-icon-loading", "primary")
-//		} else {
-//			log.Println("CNAME validation pending for domain:", *option.DomainName)
-//			upgradeProgress(10, merchantName, "el-icon-close", "primary")
-//		}
-//	}
-//
-//	//todo : 这里要改，每检测一次，就返回一次结果，上面的for不对
-//	return true
-//}
+	return true
+
+	//c.JSON(http.StatusOK, gin.H{"message": "success"})
+}
 
 func GetSSLStatus(merchantName string) bool {
 	site := getMerchantByName(merchantName)
@@ -191,7 +189,6 @@ func GetSSLStatus(merchantName string) bool {
 		return true
 	} else {
 		log.Println("CNAME validation pending for domain:", *certDetail.Certificate.DomainValidationOptions[0].DomainName)
-		upgradeProgress(10, merchantName, "el-icon-close", "primary")
 		site.Status = "failed"
 		updateMerchantInfo(site)
 		return false

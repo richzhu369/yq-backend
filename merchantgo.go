@@ -36,55 +36,71 @@ func createMerchant(c *gin.Context) {
 		return
 	}
 
+	// 先返回成功，创建任务在后台执行
+	c.JSON(http.StatusOK, gin.H{
+		"code":    20000,
+		"message": "创建商户成功",
+		"res":     "success",
+	})
+
+	go createPipeline(merchantName, merchantCode, merchant)
+}
+
+func createPipeline(merchantName, merchantCode string, merchant MerchantInfo) {
 	// 创建前端timeline步骤
 	createProgress(merchantName)
 
 	var res bool
-	// 1. 查域名
-	res = dynadotSearchDomain(merchantName, merchantCode)
-	if !res {
-		createMerchantFailed(c)
+	//1. 查域名
+	if res = dynadotSearchDomain(merchantName, merchantCode); !res {
+		return
 	}
+
 	// 2. 买域名
-	res = dynadotBuyDomain(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = dynadotBuyDomain(merchantName); !res{
+		return
 	}
+
 	// 3. 域名添加到 cloudflare
-	res = cloudflareCreateZone(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = cloudflareCreateZone(merchantName);!res{
+		return
 	}
+
 	// 4. 更改NS到 cloudflare
-	res = dynadotChangeNS(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = dynadotChangeNS(merchantName);!res{
+		return
 	}
+
 	// 5. 验证cloudflare NS
+	time.Sleep(10 * time.Second)
+	cloudflareForceCheck(merchantName)
+	log.Println("执行NS server检测")
+	time.Sleep(10 * time.Second)
+
 	for !cloudflareCheckZone(merchantName) {
 		log.Println("cloudflare NS验证未通过，正在重试...")
 		time.Sleep(5 * time.Second)
 	}
 	// 6. 创建cname * ，到cf的lb
-	res = cloudflareCreateRootRecord(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = cloudflareCreateRootRecord(merchantName);!res{
+		return
 	}
+
 	// 7. aws中创建SSL
-	res = createSSL(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = createSSL(merchantName);!res{
+		return
 	}
+
 	// 8. 获得SSL验证信息
-	res = GetSSLVerifyInfo(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	for !GetSSLVerifyInfo(merchantName) {
+		log.Println("获取aws的ssl验证信息出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 	// 9. 在cloudflare中创建 aws ssl需要的 cname
-	res = cloudflareCreateSSLRecord(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = cloudflareCreateSSLRecord(merchantName);!res{
+		return
 	}
+
 	// 10. 在aws中检测ssl的状态，是否通过验证
 	for !GetSSLStatus(merchantName) {
 		log.Println("aws SSL状态检查未通过，正在重试...")
@@ -92,39 +108,30 @@ func createMerchant(c *gin.Context) {
 	}
 
 	// 11. 在aws中创建 cloudfront
-	res = createCloudFront(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	for !createCloudFront(merchantName) {
+		log.Println("在aws中创建 cloudfront出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
+
 	// 12. 在cloudflare中创建 cloudfront的cname ht
-	res = cloudflareCreateCloudfrontRecord(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = cloudflareCreateCloudfrontRecord(merchantName);!res{
+		return
 	}
 
 	// 13. 创建RocketMQ Topic
-	res = createTopic(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = createTopic(merchantName); !res{
+		return
 	}
+
 	// 14. 创建ETCD配置
-	res = createETCD(merchantName)
-	if !res {
-		createMerchantFailed(c)
+	if res = createETCD(merchantName);!res{
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    20000,
-		"message": "创建商户成功",
-		"res":     "success",
-	})
-}
-
-func createMerchantFailed(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"code":    40001,
-		"message": "创建商户失败",
-	})
+	// 更新商户表的 status
+	merchant = getMerchantByName(merchantName)
+	merchant.Status = "done"
+	insertMerchantInfo(merchant)
 }
 
 func merchantGetProgress(c *gin.Context) {
