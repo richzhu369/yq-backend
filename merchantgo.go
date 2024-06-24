@@ -52,25 +52,28 @@ func createPipeline(merchantName, merchantCode string, merchant MerchantInfo) {
 	// 创建前端timeline步骤
 	createProgress(merchantName)
 
-	var res bool
 	//1. 查域名
-	if res = dynadotSearchDomain(merchantName, merchantCode); !res {
-		return
+	for !dynadotSearchDomain(merchantName, merchantCode) {
+		log.Println("dynadot查询域名出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 2. 买域名
-	if res = dynadotBuyDomain(merchantName); !res{
-		return
+	for !dynadotBuyDomain(merchantName) {
+		log.Println("dynadot购买域名出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 3. 域名添加到 cloudflare
-	if res = cloudflareCreateZone(merchantName);!res{
-		return
+	for !cloudflareCreateZone(merchantName) {
+		log.Println("cloudflare创建zone出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 4. 更改NS到 cloudflare
-	if res = dynadotChangeNS(merchantName);!res{
-		return
+	for !dynadotChangeNS(merchantName) {
+		log.Println("更改NS到cloudflare出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 5. 验证cloudflare NS
@@ -84,13 +87,15 @@ func createPipeline(merchantName, merchantCode string, merchant MerchantInfo) {
 		time.Sleep(5 * time.Second)
 	}
 	// 6. 创建cname * ，到cf的lb
-	if res = cloudflareCreateRootRecord(merchantName);!res{
-		return
+	for !cloudflareCreateRootRecord(merchantName) {
+		log.Println("cloudflare创建cname出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 7. aws中创建SSL
-	if res = createSSL(merchantName);!res{
-		return
+	for !createSSL(merchantName) {
+		log.Println("aws创建SSL出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 8. 获得SSL验证信息
@@ -99,8 +104,9 @@ func createPipeline(merchantName, merchantCode string, merchant MerchantInfo) {
 		time.Sleep(5 * time.Second)
 	}
 	// 9. 在cloudflare中创建 aws ssl需要的 cname
-	if res = cloudflareCreateSSLRecord(merchantName);!res{
-		return
+	for cloudflareCreateSSLRecord(merchantName) {
+		log.Println("cloudflare创建SSL cname出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 10. 在aws中检测ssl的状态，是否通过验证
@@ -116,18 +122,21 @@ func createPipeline(merchantName, merchantCode string, merchant MerchantInfo) {
 	}
 
 	// 12. 在cloudflare中创建 cloudfront的cname ht
-	if res = cloudflareCreateCloudfrontRecord(merchantName);!res{
-		return
+	for !cloudflareCreateCloudfrontRecord(merchantName) {
+		log.Println("cloudflare创建cloudfront cname出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 13. 创建RocketMQ Topic
-	if res = createTopic(merchantName); !res{
-		return
+	for !createTopic(merchantName) {
+		log.Println("创建RocketMQ Topic出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 14. 创建ETCD配置
-	if res = createETCD(merchantName);!res{
-		return
+	for !createETCD(merchantName) {
+		log.Println("创建ETCD配置出错，正在重试...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// 更新商户表的 status
