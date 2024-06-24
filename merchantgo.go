@@ -5,18 +5,43 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 func getAllMerchant(c *gin.Context) {
 	var merchants []MerchantInfo
+	var total int64
 
-	DB.Find(&merchants)
+	// 分页参数
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	sort := c.DefaultQuery("sort", "+id")
+
+	// 计算分页的偏移量
+	offset := (page - 1) * limit
+
+	// 排序处理，根据前端传来的参数决定升序还是降序
+	sortOrder := ""
+	if sort[0] == '%' { // 假设传来的是 URL 编码后的 '+'
+		if sort[1] == '2' {
+			sortOrder = "id desc" // 降序
+		}
+	} else {
+		sortOrder = "id" // 默认升序
+	}
+
+	// 查询数据库
+	DB.Order(sortOrder).Offset(offset).Limit(limit).Find(&merchants)
+	DB.Model(&MerchantInfo{}).Count(&total) // 计算总数
+
+	//DB.Find(&merchants)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 20000,
 		"data": gin.H{
 			"items": merchants,
+			"total": total,
 		},
 	})
 }
@@ -46,7 +71,6 @@ func createMerchant(c *gin.Context) {
 	go createPipeline(merchantName, merchantCode, merchant)
 }
 
-// todo 下面的调用方法，应该都改成for，方便失败自动修复
 // createPipeline 开始创建商户
 func createPipeline(merchantName, merchantCode string, merchant MerchantInfo) {
 	// 创建前端timeline步骤
