@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/tidwall/gjson"
 	"io"
 	"log"
@@ -240,108 +239,4 @@ func cloudflareCreateCloudfrontRecord(merchantName string) bool {
 		log.Println("新建CloudFront CNAME记录失败,gerRest: ", getRes.String())
 		return false
 	}
-}
-
-func bindFrontendDomain(c *gin.Context) {
-	merchantName := c.PostForm("merchantName")
-	frontDomain := c.PostForm("frontendDomain")
-	site := getMerchantByName(merchantName)
-
-	// 判断字符串是否已经存在 site.FrontendDomain 中
-	if strings.Contains(site.FrontendDomain, frontDomain) {
-		c.JSON(http.StatusOK, gin.H{
-			"code":    40001,
-			"message": frontDomain + ": 域名已存在",
-		})
-		log.Println(frontDomain + ": 域名已存在")
-		return
-	}
-
-	// 如果当前商户没有前端域名，那么不加逗号
-	if site.FrontendDomain == "" {
-		site.FrontendDomain = frontDomain
-	} else {
-		site.FrontendDomain = site.FrontendDomain + "," + frontDomain
-	}
-
-	updateMerchantInfo(site)
-
-	log.Println(site.FrontendDomain)
-
-	c.JSON(http.StatusOK, gin.H{
-		"code": 20000,
-	})
-}
-
-func removeElementFromDomain(domain string, element string) string {
-	// 使用逗号拆分字符串
-	elements := strings.Split(domain, ",")
-
-	// 遍历元素并删除指定的元素
-	var result []string
-	for _, e := range elements {
-		if strings.TrimSpace(e) != element {
-			result = append(result, strings.TrimSpace(e))
-		}
-	}
-
-	// 使用逗号重新组合字符串
-	return strings.Join(result, ",")
-}
-
-func deleteFrontendDomain(c *gin.Context) {
-	merchantName := c.PostForm("merchantName")
-	deleteDomain := c.PostForm("deleteDomain")
-	site := getMerchantByName(merchantName)
-
-	if site.FrontendDomain == deleteDomain {
-		fmt.Println("相等")
-		site.FrontendDomain = ""
-		updateMerchantInfo(site)
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-		})
-		log.Println("删除域名" + deleteDomain + "成功")
-		return
-	}
-
-	res := removeElementFromDomain(site.FrontendDomain, deleteDomain)
-
-	site.FrontendDomain = res
-	updateMerchantInfo(site)
-
-	c.JSON(http.StatusOK, gin.H{
-		"code": 20000,
-	})
-	log.Println("删除域名" + deleteDomain + "成功")
-}
-
-func merchantGetBindDomain(c *gin.Context) {
-	merchantName := c.Query("merchantName")
-	site := getMerchantByName(merchantName)
-
-	// 组合域名列表
-	log.Println("获取：site.FrontendDomain: ", site.FrontendDomain)
-	if site.FrontendDomain == "" {
-		c.JSON(http.StatusOK, gin.H{
-			"code": 20000,
-			"data": gin.H{
-				"items": "",
-			},
-		})
-		return
-	}
-	data := make([]map[string]string, 0)
-	values := strings.Split(site.FrontendDomain, ",")
-	for _, value := range values {
-		data = append(data, map[string]string{"domain": strings.TrimSpace(value)})
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"code": 20000,
-		"data": gin.H{
-			"items": data,
-		},
-	})
 }
