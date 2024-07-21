@@ -1,6 +1,7 @@
 package main
 
 type PublicProperty struct {
+	ID            uint   `gorm:"primarykey" json:"-"`
 	RdsServers    string `json:"RdsServers"`
 	RdsUser       string `json:"RdsUser"`
 	RdsPasswd     string `json:"RdsPasswd"`
@@ -14,6 +15,6 @@ type PublicProperty struct {
 	MQTopics      string `json:"MQTopics"`
 	MQBroker      string `json:"MQBroker"`
 	RedisServer   string `json:"RedisServer"`
-	RedisDBNumber int32 `json:"RedisDBNumber"`
+	RedisDBNumber int32  `json:"RedisDBNumber"`
 	ETCDServer    string `json:"ETCDServer"`
 }

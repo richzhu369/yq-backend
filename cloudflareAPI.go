@@ -187,7 +187,7 @@ func cloudflareCreateSSLRecord(merchantName string) bool {
 		site.Process = "新建CNAME记录失败"
 		site.Status = "failed"
 		updateMerchantInfo(site)
-		upgradeProgress(9, merchantName, "el-icon-close", "primary")
+		upgradeProgress(9, merchantName, "el-icon-loading", "primary")
 		return false
 	}
 }
